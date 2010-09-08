@@ -49,9 +49,9 @@ Note the operator is `~>*` if there are more than one values. The objects `RDF`,
 Elements may be created as follows
 
 || Type || Scala || Turtle ||
-|| Plain literal || "lit" || "lit" ||
-|| Literal with langugage || "lit"@@"en" || "lit"@en ||
-|| Typed literal || "lit"^^XSD.string || "lit"^^xsd:string ||
-|| QName || nameSpace&"suffix" || namespace:suffix ||
-|| QName (no prefix) || 'suffix || :suffix ||
-|| URIRef || ("""http://www.example.org/"""uri) || <http://www.example.org> ||
+|| Plain literal || `"lit"` || `"lit"` ||
+|| Literal with langugage || `"lit"@@"en"` || `"lit"@en` ||
+|| Typed literal || `"lit"^^XSD.string` || `"lit"^^xsd:string` ||
+|| QName || `nameSpace&"suffix"` || `namespace:suffix` ||
+|| QName (no prefix) || `'suffix` (equivalent to `RDF.base&"suffix"`) || `:suffix` ||
+|| URIRef || `("""http://www.example.org/"""uri)` || `<http://www.example.org>` ||
