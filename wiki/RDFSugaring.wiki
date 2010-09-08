@@ -44,5 +44,17 @@ import scala.rdf._
 import scala.rdf.sugar._
 
 val stat : Statement = ("""file:test#subj"""uri) ~> (("""file:test#pred1"""uri) ~> "subj",
-                                                     ("""file:test#pred1"""uri) ~>* ("subj1", "subj2"))
+                                                     ("""file:test#pred2"""uri) ~>* ("subj1", "subj2"))
 }}}
+
+Note the operator is `~>*` if there are more than one values. The objects `RDF`, `RDFS` and `XSD` are available with the usual predicates. There also exists `RDF.base` which is used as the base name space.
+
+Elements may be created as follows
+
+| Type | Scala | Turtle |
+|| Plain literal || "lit" || "lit" ||
+|| Literal with langugage || "lit"@@"en" || "lit"@en ||
+|| Typed literal || "lit"^^XSD.string || "lit"^^xsd:string ||
+|| QName || nameSpace&"suffix" || namespace:suffix ||
+|| QName (no prefix) || 'suffix || :suffix ||
+|| URIRef || ("""http://www.example.org/"""uri) || <http://www.example.org> ||
