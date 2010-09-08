@@ -1,5 +1,6 @@
-package scala.rdf
+package scala.rdf.ntriples
 
+import scala.rdf._
 import scala.util.parsing.combinator._
 import scala.util.parsing.input.Reader
 import java.net.URI

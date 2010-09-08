@@ -51,6 +51,13 @@ case class BlankNode(val id:String) extends Resource {
 }
 
 /**
+ * An anonymous blank RDF resource.
+ */
+class AnonymousNode extends Resource {
+  override def toString= "[ ]"
+}
+
+/**
  * An RDF statement (triple).
  * @param subj The subject of the triple
  * @param prop The predicate (property) of the triple
