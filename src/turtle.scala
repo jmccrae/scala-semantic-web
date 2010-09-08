@@ -190,7 +190,7 @@ import java.util.Random
  * A Turtle parser. Reads a turtle file into a list of statements
  */
 object TurtleParser {
-    import RDF._
+    import scala.rdf.sugar._
   
     private[TurtleParser] val rand = new Random()
     

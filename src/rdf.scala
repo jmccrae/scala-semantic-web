@@ -203,7 +203,7 @@ object XSD extends NameSpace("xsd","http://www.w3.org/2001/XMLSchema") {
 }
 
 /** The Resource Description Framework name space. All the RDF URIs are defined here, also implicit conversions for common types are included here */
-object RDF extends NameSpace("rdf", """http://www.w3.org/1999/02/22-rdf-syntax-ns#""") {
+object sugar {
   /** Convert a string to a plain literal */
   implicit def str2lit(str:String) = SimpleLiteral(str)
   /** Convert a string to typed literal, lang literal or URI ref */
@@ -213,7 +213,7 @@ object RDF extends NameSpace("rdf", """http://www.w3.org/1999/02/22-rdf-syntax-n
     def uri = URIRef(URI.create(str))
   }
   /** Convert a symbol to a QName in the RDF base namespace */
-  implicit def sym2qn(sym:Symbol) = base&(sym.name)
+  implicit def sym2qn(sym:Symbol) = RDF.base&(sym.name)
   /** Convert a triple to a statement */
   implicit def trip2stat(trip:Tuple3[Any,Any,Any]) = trip match { 
     case (subj,prop,obj) => new { def rdf = new Statement(toResource(subj),
@@ -246,7 +246,9 @@ object RDF extends NameSpace("rdf", """http://www.w3.org/1999/02/22-rdf-syntax-n
     case x : URI => uri2ref(x)
     case _ => throw new IllegalArgumentException(r.toString + " is not a value")
   }
+}
 
+object RDF extends NameSpace("rdf", """http://www.w3.org/1999/02/22-rdf-syntax-ns#""") {
   private var _base = NameSpace("","")
   
   /** Get the (globally defined) base name space */
