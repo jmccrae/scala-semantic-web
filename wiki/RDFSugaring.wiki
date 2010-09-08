@@ -48,7 +48,7 @@ Note the operator is `~>*` if there are more than one values. The objects `RDF`,
 
 Elements may be created as follows
 
-| Type | Scala | Turtle |
+|| Type || Scala || Turtle ||
 || Plain literal || "lit" || "lit" ||
 || Literal with langugage || "lit"@@"en" || "lit"@en ||
 || Typed literal || "lit"^^XSD.string || "lit"^^xsd:string ||
