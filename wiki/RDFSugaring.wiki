@@ -1,6 +1,6 @@
-#summary Syntactic sugaring for defining RDF graphs in scala
+#summary Syntactic sugaring for defining RDF graphs in Scala
 
-= Introduction =
+= Syntactic sugaring for defining RDF graphs in Scala =
 
 The Scala Semantic Web library includes some sugaring for creating RDF graphs. A simple example is as follows
 
