@@ -1,5 +1,6 @@
-package scala.rdf
+package scala.rdf.xml
 
+import scala.rdf._
 import scala.collection.mutable.{HashMap,HashSet,ListBuffer,LinkedList}
 import scala.xml._
 import java.net.URI
@@ -37,7 +38,11 @@ object RDFXML {
     var nameSpaces = new HashMap[String,NameSpace]()
     var nsByURI = new HashMap[String,NameSpace]()
     
-    def nameSpace(key:String) : NameSpace =  nameSpaces(key)
+    def nameSpace(key:String) : NameSpace =  if(key == null) {
+        nameSpaces("")
+      } else { 
+        nameSpaces(key)
+      }
     
     def buildNameSpaces(scope : NamespaceBinding) = {
       var curr = scope
@@ -86,7 +91,7 @@ object RDFXML {
             }
           }
         }
-          
+                  
         if(subject == None) {
           subject = Some(genid())
           bnIDs += 1
@@ -226,6 +231,8 @@ object RDFXML {
       if(value.matches("""&([^;]);(.*)""")) {
         val qualRegex(ns,suf) = value
         nameSpace(ns)&suf
+      } else if(value.matches("""#.*""")) {
+        nameSpace("")&value.substring(1)
       } else {
         nsByURI.keys.find(x => value.startsWith(x)) match {
           case Some(key) => nsByURI(key)&(value.substring(key.length))
@@ -268,7 +275,7 @@ object RDFXML {
       Elem("rdf","RDF",Null,scope,nodes:_*)
     }
     
-    def getHeader(node : Node) : String = {
+    private[RDFXML] def getHeader(node : Node) : String = {
       val rv = new StringBuffer()
       rv.append("<?xml version=\"1.0\"?>\n\n<!DOCTYPE rdf:RDF [\n")
       var scope = node.scope
@@ -466,7 +473,7 @@ object RDFXML {
     }
 
     
-    def deduceParseType(objs : LinkedList[Value], 
+    private[RDFXML] def deduceParseType(objs : LinkedList[Value], 
     theMap : HashMap[Resource, HashMap[NamedNode, LinkedList[Value]]],
     dupes : HashSet[BlankNode]) : ParseType = {
       var collectionFound = false
@@ -498,7 +505,7 @@ object RDFXML {
       }
     }
               
-    def toResourceName(nn : NamedNode) = {
+    private[RDFXML] def toResourceName(nn : NamedNode) = {
       nn match {
         case QName(ns,suf) => Unparsed("&"+ns.id +";"+suf)
         case URIRef(uri) => Unparsed(uri.toString)

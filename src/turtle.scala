@@ -1,5 +1,6 @@
-package scala.rdf
+package scala.rdf.turtle
 
+import scala.rdf._
 import java.io._
 import scala.collection.mutable.{HashMap,LinkedList,HashSet}
 
@@ -341,10 +342,10 @@ object TurtleParser {
       
       def objct = resource | blank | lit
       
-      def lit = quotedString ~ (language ?) ^^ {
+      def lit = datatypeString ^^ { case x ~ y => new TypedLiteral(x.toString, y) } |  
+        quotedString ~ (language ?) ^^ {
           case x ~ None => new SimpleLiteral(x.toString)
           case x ~ Some(y) => new LangLiteral(x.toString,y.toString) } | 
-        datatypeString ^^ { case x ~ y => new TypedLiteral(x.toString, y) } |  
         integer ^^ { case x => new TypedLiteral(x.toString, XSD.integer) } | 
         duble ^^ { case x => new TypedLiteral(x.toString, XSD._double) } | 
         bool ^^ { case x => new TypedLiteral(x.toString,XSD._boolean) }
@@ -413,7 +414,7 @@ object TurtleParser {
       //def relativeURI = """[A-Za-z0-9_+:#]+"""r
       def relativeURI = """[^ <>]+"""r
       
-      def quotedString = string | longString
+      def quotedString = longString | string
       
       //def string = "\"(([^\"])|(\\\"))+\""r
       def string = regex("\"[^\"]*\""r) ^^ { case x => x.substring(1,x.length-1) }
