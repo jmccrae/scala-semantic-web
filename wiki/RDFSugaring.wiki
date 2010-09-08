@@ -40,7 +40,7 @@ Graphs may be created in a Turtle like manner with mutliple predicates and objec
 import scala.rdf._
 import scala.rdf.sugar._
 
-val stat : Statement = ("""file:test#subj"""uri) ~> (("""file:test#pred1"""uri) ~> "subj",
+val stat : List[Statement] = ("""file:test#subj"""uri) ~> (("""file:test#pred1"""uri) ~> "subj",
                                                      ("""file:test#pred2"""uri) ~>* ("subj1", "subj2"))
 }}}
 
