@@ -18,7 +18,6 @@ val stat : Statement = subj ~> pred ~> obj
 Here a statement is created from two hard coded URIs. This may be further simplified by the use of name spaces as follows
 
 {{{
-import java.net.URI
 import scala.rdf._
 
 val ns = NameSpace("test","file:test#")
@@ -29,7 +28,6 @@ val stat : Statement = ns&"subj" ~> ns&"pred" ~> ns&"obj"
 For further simplification there are explicit conversions available in `rdf.scala.sugar`, for example we may create URIs as follows
 
 {{{
-import java.net.URI
 import scala.rdf._
 import scala.rdf.sugar._
 
@@ -39,7 +37,6 @@ val stat : Statement = ("""file:test#subj"""uri) ~> ("""file:test#pred"""uri) ~>
 Graphs may be created in a Turtle like manner with mutliple predicates and objects
 
 {{{
-import java.net.URI
 import scala.rdf._
 import scala.rdf.sugar._
 
