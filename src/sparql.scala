@@ -1,27 +1,40 @@
 package scala.rdf.sparql
 
 import scala.util.parsing.combinator._
-import scala.rdf.{Value=>RDFValue,_}
-import java.net.URI;
+import scala.rdf.{Value=>RDFValue,
+_}
+import java.net.URI
+
+trait SPARQLElement
 
 /**
  * A SPARQL query
  * @param decls Any namespace headers
  * @param body The query body
  */
-case class SPARQLQuery(val decls : List[NameSpace], val body : QueryBody) {
+case class SPARQLQuery(val decls : List[NameSpace], val body : QueryBody) extends SPARQLElement{
   private def nsToString(ns:NameSpace) = ns match {
     case NameSpace("",x) => "BASE <" + x + ">"
     case NameSpace(x,y) => "PREFIX " + x + ": <" + y + ">"
   }
   
-  override def toString() = (decls.map(nsToString(_))).mkString("\n") + body
+  def filter(p : (RDFValue) => Boolean) : List[RDFValue] = body.filter(p)
+  
+  def vars : Set[Variable] = filter(_.isInstanceOf[Variable]).map{
+    case v : Variable => v
+    case _ => throw new RuntimeException("unreachable") 
+  }.toSet
+    
+  override def toString() = (decls.map(nsToString(_))).mkString("\n") + 
+  (if(!decls.isEmpty) { "\n" } else { "" }) + body
 }
 
 /**
  * The body of the query
  */
-sealed trait QueryBody
+sealed trait QueryBody {
+  def filter(p : (RDFValue) => Boolean) : List[RDFValue]
+}
 
 /**
  * A modifier to a select query
@@ -53,6 +66,10 @@ case class SelectQuery(val modifier : Option[SelectModifier], val selection : Li
   val datasetClauses : List[DatasetClause], val whereClause : List[GraphExpression], 
   val solutionModifier : SolutionModifier) 
   extends QueryBody{
+    def filter(p : (RDFValue) => Boolean) : List[RDFValue] = 
+      selection.filter(p) ::: datasetClauses.flatMap(_.filter(p)) ::: 
+      whereClause.flatMap(_.filter(p)) ::: solutionModifier.filter(p)
+      
     override def toString() = "SELECT " + (if(modifier.isEmpty) { "" } else { modifier.get + " " }) +
   (if(selection.isEmpty) {"*"} else { selection.mkString(" ") }) + datasetClauses.mkString(" ") +
   "\nWHERE{ " + whereClause.mkString(" .\n") + " }\n" + solutionModifier
@@ -67,7 +84,12 @@ case class SelectQuery(val modifier : Option[SelectModifier], val selection : Li
  */
 case class ConstructQuery(val constructTemplate : ConstructTemplate, val datasetClauses : List[DatasetClause],
   val whereClause : List[GraphExpression], val solutionModifier : SolutionModifier) extends QueryBody {
-  override def toString = "CONSTRUCT " + datasetClauses.mkString(" ") + "\nWHERE{ " + whereClause.mkString(" .\n") + " }\n" + solutionModifier
+  def filter(p : (RDFValue) => Boolean) : List[RDFValue] = constructTemplate.filter(p) :::
+    datasetClauses.flatMap(_.filter(p)) :::
+    whereClause.flatMap(_.filter(p)) ::: solutionModifier.filter(p)
+  
+  
+    override def toString = "CONSTRUCT " + datasetClauses.mkString(" ") + "\nWHERE{ " + whereClause.mkString(" .\n") + " }\n" + solutionModifier
   }
   
 /**
@@ -79,6 +101,10 @@ case class ConstructQuery(val constructTemplate : ConstructTemplate, val dataset
  */
 case class DescribeQuery(val variables : List[NamedNode], val datasetClauses : List[DatasetClause],
   val whereClause : List[GraphExpression], val solutionModifier : SolutionModifier) extends QueryBody {
+    def filter(p : (RDFValue) => Boolean) : List[RDFValue] = variables.filter(p) :::
+      datasetClauses.flatMap(_.filter(p)) :::
+      whereClause.flatMap(_.filter(p)) ::: solutionModifier.filter(p)
+    
     override def toString = "DESCRIBE " + (if(variables.isEmpty) { "*" } else { variables.mkString(" ") }) +
     " " + datasetClauses.mkString(" ") + "\n" + (if(whereClause.isEmpty) { "" } else { "\nWHERE{ " + whereClause.mkString(" .\n") + " }\n" }) + solutionModifier
 }
@@ -90,6 +116,9 @@ case class DescribeQuery(val variables : List[NamedNode], val datasetClauses : L
  */
 case class AskQuery(val datasetClauses : List[DatasetClause], val whereClause : List[GraphExpression]) 
 extends QueryBody {
+  def filter(p : (RDFValue) => Boolean) : List[RDFValue] = datasetClauses.flatMap(_.filter(p)) ::: 
+  whereClause.flatMap(_.filter(p))
+  
   override def toString = "ASK "+ datasetClauses.mkString(" ") + 
   " WHERE{ " + whereClause.mkString(" .\n") + " }"
 }
@@ -97,13 +126,17 @@ extends QueryBody {
 /**
  * A dataset selection clause
  */
-trait DatasetClause
+trait DatasetClause {
+ def filter(p : (RDFValue) => Boolean) : List[RDFValue]
+}
 
 /**
  * Select data from a named graph
  * @param ref The named graph
  */
 case class NamedGraphClause(val ref : NamedNode) extends DatasetClause {
+  def filter(p : (RDFValue) => Boolean) : List[RDFValue] = if(p(ref)) { List(ref) } else { Nil }
+  
   override def toString = "FROM NAMED " + ref
 }
 
@@ -112,6 +145,8 @@ case class NamedGraphClause(val ref : NamedNode) extends DatasetClause {
  * @param ref The default graph
  */
 case class DefaultGraphClause(val ref : NamedNode) extends DatasetClause {
+  def filter(p : (RDFValue) => Boolean) : List[RDFValue] = if(p(ref)) { List(ref) } else { Nil }
+  
   override def toString = "FROM " + ref.toString
 }
 
@@ -135,6 +170,11 @@ case class SolutionModifier(val limit : Option[Int] = None,
     case None => ""
   })
   
+  def filter(p : (RDFValue) => Boolean) : List[RDFValue] = order match {
+    case Some(x) => x.filter(p)
+    case None => Nil
+  }
+  
   private def join[T](opt1 : Option[T], opt2 : Option[T]) : Option[T] = opt1 match {
     case Some(x) => opt2 match {
       case Some(_) => throw new IllegalArgumentException("Both options set")
@@ -153,7 +193,9 @@ case class SolutionModifier(val limit : Option[Int] = None,
 /**
  * A condition for ordering results
  */
-trait OrderCondition
+trait OrderCondition {
+  def filter(p : (RDFValue) => Boolean) : List[RDFValue]
+}
 
 /**
  * Order results by the value of an expression
@@ -161,19 +203,25 @@ trait OrderCondition
  * @param by The expression to evaluate for sorting
  */
 case class AscDesc(val ascending : Boolean, val by : BrackettedExpression) extends OrderCondition {
+  def filter(p : (RDFValue) => Boolean) : List[RDFValue] = by.filter(p)
+  
   override def toString = (if(ascending) { "ASC " } else { "DESC " }) + by
 }
 
 /**
  * A graph expression. A list of these is a graph pattern
  */
-trait GraphExpression
+trait GraphExpression {
+  def filter(p : (RDFValue) => Boolean) : List[RDFValue]
+}
 
 /**
  * Indicates an optional graph pattern
  * @param graphPattern The list of patterns unified
  */
 case class OptionalGraphPattern(val graphPattern : List[GraphExpression]) extends GraphExpression {
+  def filter(p : (RDFValue) => Boolean) : List[RDFValue] = graphPattern.flatMap(_.filter(p))
+  
   override def toString = "OPTIONAL { " + graphPattern.mkString(" .\n") + " }"
 }
 
@@ -184,6 +232,12 @@ case class OptionalGraphPattern(val graphPattern : List[GraphExpression]) extend
  */
 case class GraphGraphPattern(val group : NamedNode, val graphPattern : List[GraphExpression]) 
   extends GraphExpression {
+    def filter(p : (RDFValue) => Boolean) : List[RDFValue] = if(p(group)) { 
+      group :: graphPattern.flatMap(_.filter(p))
+    } else {
+      graphPattern.flatMap(_.filter(p))
+    }
+    
     override def toString = "GRAPH " + group + " { " + graphPattern.mkString(" .\n") + " }"
 }
 
@@ -193,6 +247,8 @@ case class GraphGraphPattern(val group : NamedNode, val graphPattern : List[Grap
  */
 case class UnionGraphPattern(val graphPatterns : List[List[GraphExpression]]) extends GraphExpression {
   require(!graphPatterns.isEmpty)
+  def filter(p : (RDFValue) => Boolean) : List[RDFValue] = graphPatterns.flatMap(_.flatMap(_.filter(p)))
+  
   override def toString = (graphPatterns map 
     { pattern => "{ " + pattern.mkString(" .\n") + " }" }).mkString(" UNION ")
 }
@@ -202,13 +258,17 @@ case class UnionGraphPattern(val graphPatterns : List[List[GraphExpression]]) ex
  * @param constraint The constraint used by this filter
  */
 case class Filter(val constraint : Constraint) extends GraphExpression {
+  def filter(p : (RDFValue) => Boolean) : List[RDFValue] = constraint.filter(p)
+  
   override def toString = "FILTER " + constraint
 }
 
 /**
  * A constraint used by a filter or an ordering
  */
-trait Constraint extends OrderCondition
+trait Constraint extends OrderCondition {
+  def filter(p : (RDFValue) => Boolean) : List[RDFValue]
+}
 
 /**
  * A call to a named function
@@ -217,6 +277,8 @@ trait Constraint extends OrderCondition
  */
 case class FunctionCall(val function : NamedNode, args : List[LogicalExpression]) 
 extends Constraint with PrimaryExpression {
+  def filter(p : (RDFValue) => Boolean) : List[RDFValue] = args.flatMap(_.filter(p))
+  
   override def toString = function + "(" + args.mkString(",") + ")"
 }
 
@@ -226,6 +288,8 @@ extends Constraint with PrimaryExpression {
  */
 case class ConstructTemplate(val body : List[Triple]) {
   require(!body.isEmpty)
+  def filter(p : (RDFValue) => Boolean) : List[RDFValue] = body.flatMap(_.filter(p))
+  
   override def toString = "{ " + body.mkString(" .\n") + " }"
 }
 
@@ -236,6 +300,16 @@ case class ConstructTemplate(val body : List[Triple]) {
  */
 case class Triple(val head : Resource, val body : List[PredicateObject]) extends GraphExpression {
   require(!body.isEmpty || head.isInstanceOf[BNodeList] || head.isInstanceOf[Collection])
+  def filter(p : (RDFValue) => Boolean) : List[RDFValue] = (head match {
+    case c : Collection => c.filter(p)
+    case b : BNodeList => b.filter(p)
+    case _ => Nil
+  }) :::  (if(p(head)) {
+    head :: body.flatMap(_.filter(p))
+  } else {
+    body.flatMap(_.filter(p))
+  })
+  
   override def toString = head + " " + body.mkString(" ;\n")
   /** Convert to a list of statements */
   def toStats : List[Statement] = (head match {
@@ -258,6 +332,12 @@ case class Triple(val head : Resource, val body : List[PredicateObject]) extends
  */
 case class PredicateObject(val pred : NamedNode, val objs : List[RDFValue]) {
   require(!objs.isEmpty)
+  def filter(p : (RDFValue) => Boolean) : List[RDFValue] = if(p(pred)) {
+    pred :: objs.filter(p)
+  } else {
+    objs.filter(p)
+  }
+  
   override def toString = (if(pred == RDF._type) {
     "a " 
   } else {
@@ -271,6 +351,13 @@ case class PredicateObject(val pred : NamedNode, val objs : List[RDFValue]) {
  */
 case class Collection(val elems : List[RDFValue]) extends AnonymousNode {
   import scala.rdf.RDF._
+  
+  def filter(p : (RDFValue) => Boolean) : List[RDFValue] = elems.flatMap{ x => x match {
+    case c : Collection => c.filter(p) ::: (if(p(c)) { List(c) } else { Nil })
+    case b : BNodeList => b.filter(p) ::: (if(p(b)) { List(b) } else { Nil })
+    case _ => if(p(x)) { List(x) } else { Nil }
+    }
+  }
   
   override def toString = "( " + elems.mkString(" ") + " )"
   /** Convert to a list of statements */
@@ -302,6 +389,8 @@ case class Collection(val elems : List[RDFValue]) extends AnonymousNode {
  */
 case class BNodeList(val body : List[PredicateObject]) extends AnonymousNode {
   override def toString = "[ " + body.mkString(" ;\n") + " ]"
+  def filter(p : (RDFValue) => Boolean) : List[RDFValue] = body.flatMap(_.filter(p))
+  
   /** Convert to a list of statements */
   def toStats : List[Statement] = {
     body flatMap { case PredicateObject(pred,objs) => objs flatMap {
@@ -319,7 +408,9 @@ case class BNodeList(val body : List[PredicateObject]) extends AnonymousNode {
  * A variable in a SPARQL expression
  * @param id The id of the variable (no ? or $)
  */
-case class Variable(val id : String) extends NamedNode with Constraint with PrimaryExpression {
+case class Variable(val id : String) extends NamedNode with Constraint {
+  def filter(p : (RDFValue) => Boolean) : List[RDFValue] = if(p(this)) { List(this) } else { Nil }
+  
   override def toString = "?"+id
   /** The uri is of the form <code>var:x</code> */
   def uri = URI.create("var:"+id)
@@ -328,7 +419,9 @@ case class Variable(val id : String) extends NamedNode with Constraint with Prim
 /**
  * A logical expression, resulting in a value
  */
-trait LogicalExpression
+trait LogicalExpression {
+ def filter(p : (RDFValue) => Boolean) : List[RDFValue]
+}
 
 /**
  * An or combination of one or more expressions
@@ -336,6 +429,8 @@ trait LogicalExpression
  */
 case class OrExpression(val exprs : List[AndExpression]) extends LogicalExpression {
   require(!exprs.isEmpty)
+  def filter(p : (RDFValue) => Boolean) : List[RDFValue] = exprs.flatMap(_.filter(p))
+  
   override def toString = exprs.mkString(" || ")
 }
 
@@ -344,13 +439,17 @@ case class OrExpression(val exprs : List[AndExpression]) extends LogicalExpressi
  * @param exprs The expressions
  */
 case class AndExpression(val exprs : List[ValueLogical]) {
+  def filter(p : (RDFValue) => Boolean) : List[RDFValue] = exprs.flatMap(_.filter(p))
+  
   override def toString = exprs.mkString(" && ")
 }
 
 /**
  * A logical value
  */
-trait ValueLogical extends LogicalExpression
+trait ValueLogical extends LogicalExpression {
+  def filter(p : (RDFValue) => Boolean) : List[RDFValue]
+}
 
 /**
  * A logical operand expression
@@ -361,13 +460,18 @@ trait ValueLogical extends LogicalExpression
 case class LogicalExpr(val left : NumericExpression, 
 val op : String, val right : NumericExpression) extends ValueLogical {
   require(op == "=" || op == "<" || op == ">" || op == "!=" || op == "<=" || op == ">=")
+  
+  def filter(p : (RDFValue) => Boolean) : List[RDFValue] = left.filter(p) ::: right.filter(p)
+  
   override def toString = left + " " + op + " " + right
 }
 
 /**
  * A numeric expression
  */
-trait NumericExpression extends ValueLogical
+trait NumericExpression extends ValueLogical {
+  def filter(p : (RDFValue) => Boolean) : List[RDFValue]
+}
 
 /**
  * A summation operand expression
@@ -378,13 +482,17 @@ trait NumericExpression extends ValueLogical
 case class NumericExpr(val left : MultiplicativeExpression, 
 val op : String, val right : NumericExpression) extends NumericExpression {
   require(op == "+" || op == "-")
+  def filter(p : (RDFValue) => Boolean) : List[RDFValue] = left.filter(p) ::: right.filter(p)
+  
   override def toString = left + " "+op+" " + right
 }
 
 /**
  * A numeric expression
  */
-trait MultiplicativeExpression extends NumericExpression
+trait MultiplicativeExpression extends NumericExpression {
+  def filter(p : (RDFValue) => Boolean) : List[RDFValue]
+}
 
 /**
  * A multiplicative operand expression
@@ -395,13 +503,17 @@ trait MultiplicativeExpression extends NumericExpression
 case class MultiplicationExpr(val left : UnaryExpression, 
 val op : String,val right : MultiplicativeExpression) extends MultiplicativeExpression {
   require(op == "*" || op == "/")
+  def filter(p : (RDFValue) => Boolean) : List[RDFValue] = left.filter(p) ::: right.filter(p)
+  
   override def toString = left + " "+op+" " + right
 }
 
 /**
  * A unary expression
  */
-trait UnaryExpression extends MultiplicativeExpression
+trait UnaryExpression extends MultiplicativeExpression {
+  def filter(p : (RDFValue) => Boolean) : List[RDFValue]
+}
 
 /**
  * A unary expression
@@ -410,19 +522,25 @@ trait UnaryExpression extends MultiplicativeExpression
  */
 case class UnaryExpr(val op : String, val value : PrimaryExpression) extends UnaryExpression {
   require(op == "+" || op == "-" || op == "!")
+  def filter(p : (RDFValue) => Boolean) : List[RDFValue] = value.filter(p)
+  
   override def toString = "-"+value
 }
 
 /**
  * A primary expression
  */
-trait PrimaryExpression extends UnaryExpression 
+trait PrimaryExpression extends UnaryExpression {
+  def filter(p : (RDFValue) => Boolean) : List[RDFValue]
+}
 
 /**
  * An expression in brackets
  * @param expr The expression within the brackets
  */
 case class BrackettedExpression(val expr : LogicalExpression) extends PrimaryExpression with Constraint {
+  def filter(p : (RDFValue) => Boolean) : List[RDFValue] = expr.filter(p)
+  
   override def toString = "( " + expr + " )"
 }
 
@@ -457,6 +575,14 @@ object BuiltIn  {
 case class BuiltInCall(val function : BuiltIn, val arg1 : LogicalExpression, 
   val arg2 : Option[LogicalExpression] = None, val arg3 : Option[LogicalExpression] = None) 
   extends PrimaryExpression with Constraint {
+    def filter(p : (RDFValue) => Boolean) : List[RDFValue] = arg1.filter(p) ::: (arg2 match {
+      case Some(expr) => expr.filter(p)
+      case None => Nil
+    }) ::: (arg3 match {
+      case Some(expr) => expr.filter(p)
+      case None => Nil
+    })
+  
     override def toString = function + "(" + arg1 + (arg2 match {
       case Some(x) => ","+x
       case None => ""
@@ -467,19 +593,16 @@ case class BuiltInCall(val function : BuiltIn, val arg1 : LogicalExpression,
 }
 
 /**
- * Call to a named (not built-in) function
- * @param name The function name
- * @param args The list of arguments
- */
-case class FunctionExpr(val name : NamedNode, val args : List[LogicalExpression]) extends PrimaryExpression {
-  override def toString = name + "(" + args.mkString(",") + ")"
-}
-
-/**
  * A RDF value within an expression
  * @param value The RDF value
  */
 case class ValueExpr(val value : RDFValue) extends PrimaryExpression {
+  def filter(p : (RDFValue) => Boolean) : List[RDFValue] = value match {
+    case c : Collection => c.filter(p) ::: (if(p(c)) { List(c) } else { Nil })
+    case b : BNodeList => b.filter(p) ::: (if(p(b)) { List(b) } else { Nil })
+    case x => if(p(x)) { List(x) } else { Nil }
+  }
+  
   override def toString = value.toString 
 }
 
@@ -511,10 +634,10 @@ object SPARQLParser  {
       case None ~ y => y
     }
     
-    def baseDecl = "BASE" ~> "<" ~> ("""[^>]+"""r) <~ ">" ^^
+    def baseDecl = "BASE" ~> uriref2 ^^
     { x => prefixMap.put("",NameSpace("",x)); NameSpace("",x) }
     
-    def prefixDecl = "PREFIX" ~> pName ~ (":" ~> "<" ~> ("""[^>]+"""r) <~ ">") ^^
+    def prefixDecl = "PREFIX" ~> pNameColon ~ uriref2 ^^
     { case x ~ y => prefixMap.put(x,NameSpace(x,y)); NameSpace(x,y) }
     
     def selectQuery = "SELECT" ~> (( "DISTINCT" ^^^ SelectModifier.distinct | "REDUCED" ^^^ SelectModifier.reduced)?) ~ 
@@ -677,7 +800,7 @@ object SPARQLParser  {
                       "LANGMATCHES" ~> "(" ~> (expression ~ ("," ~> expression)) <~ ")" ^^ 
                         { case x ~ y => BuiltInCall(BuiltIn.langmatches, x,Some(y)) } |
                       "DATATYPE" ~> "(" ~> expression <~ ")" ^^ { case x => BuiltInCall(BuiltIn.datatype,x) } |
-                      "BOUND" ~> "(" ~> Var <~ ")" ^^ { case x => BuiltInCall(BuiltIn.bound,x) } |
+                      "BOUND" ~> "(" ~> Var <~ ")" ^^ { case x => BuiltInCall(BuiltIn.bound,ValueExpr(x)) } |
                       "sameTerm" ~> "(" ~> (expression ~ ("," ~> expression)) <~ ")"  ^^
                       { case x ~ y => BuiltInCall(BuiltIn.sameTerm,x,Some(y)) } |
                       "isIRI" ~> "(" ~> expression <~ ")" ^^ { case x => BuiltInCall(BuiltIn.isIRI, x) } |
@@ -692,7 +815,7 @@ object SPARQLParser  {
       { case x ~ y ~ z => BuiltInCall(BuiltIn.regex, x, Some(y), z) }
     
     def uriRefOrFunction = uriRef ~ (argList?) ^^
-    { case x ~ Some(y) => FunctionExpr(x,y) 
+    { case x ~ Some(y) => FunctionCall(x,y) 
       case x ~ None => x }
       
     
@@ -718,42 +841,46 @@ object SPARQLParser  {
     
     def uriRef = uriref | qname
     
-    def qname = (((prefixName ?) <~ ":") ~ pName) ^^
-    { case Some(x) ~ y => {
+    def qname = pNameColon ~ pName ^^
+    { case x ~ y => {
         if(!prefixMap.contains(x)) {
           throw new IllegalArgumentException("Prefix " + x + " not declared")
         }
         prefixMap(x)&y
         }
-      case None ~ y => {
-        if(!prefixMap.contains("")) {
-         throw new IllegalArgumentException("Base prefix not declared")
-        }
-        prefixMap("")&y
-      }
     }
         
+    val pnChars =  	"[A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\u10000-\uEFFFF]"
+    
+    val varChars =
+    "[A-Za-z_0-9\u00B7\u0300-\u036F\u203F-\u2040\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\u10000-\uEFFFF]"
+    
+    
     def uriref = ("<" ~> relativeURI <~ ">") ^^ 
       { case x => URIRef(URI.create(x)) }
     
-    def relativeURI = """[^ <>]+"""r
+    def uriref2 = ("<" ~> relativeURI <~ ">")
+      
+    def relativeURI = """[^ <>{}\|^`\\]+"""r
         
-    def pName = """[A-Za-z_][^ <>]*"""r
-        
-    def prefixName = regex("""[A-Za-z][^ <>:]*"""r)
+    def pName = (pnChars+"""*""")r 
+    
+    def pNameColon = regex((pnChars+"""*:""")r) ^^ { x => x.substring(0,x.length-1) }
+    
+    def prefixName = regex((pnChars+"""*""")r)
         
     def strng = longString | string
         
-    def string = regex("\"[^\"]*\""r) ^^ { case x => x.substring(1,x.length-1) }
+    def string = regex("\"" + """(([^"])|(\"))*?""" + "\""r) ^^ { case x => x.substring(1,x.length-1) }
         
-    def longString = regex(("\"\"\"" + """(([^"])|(\"))+?""" + "\"\"\"")r) ^^ 
+    def longString = regex(("\"\"\"" + """(([^"])|(\"))*?""" + "\"\"\"")r) ^^ 
       { case x => x.substring(3,x.length - 3) }
      
       
-    def var1 = "?" ~> pName ^^ 
+    def var1 = "?" ~> ((varChars+"+")r) ^^ 
       { case x => Variable(x) }
     
-    def var2 = "$" ~> pName ^^ 
+    def var2 = "$" ~> ((varChars+"+")r) ^^ 
       { case x => Variable(x) }
   }
 }

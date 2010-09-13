@@ -3,6 +3,7 @@
     <property name="src.dir"     value="src"/>
     <property name="test.dir"    value="test"/>
     <property name="build.dir"   value="build"/>
+    <property name="doc.dir"     value="doc"/>
     <property name="classes.dir" value="${build.dir}/classes"/>
     <property name="jar.dir"     value="${build.dir}/jar"/>
     <property name="lib.dir"     value="../../../../java-libs/"/>
@@ -34,7 +35,8 @@
     
     <target name="compile" depends="init">
     	<javac srcdir="${src.dir}" destdir="${classes.dir}" classpathref="build.classpath"/>
-        <scalac srcdir="${src.dir}" destdir="${classes.dir}" classpathref="build.classpath"/>
+        <scalac srcdir="${src.dir}" destdir="${classes.dir}" classpathref="build.classpath"
+        unchecked="on" deprecation="on"/>
     </target>
 
     <target name="jar" depends="compile">
@@ -43,7 +45,12 @@
             
         </jar>
     </target>
+    
+    <target name="doc">
+      <mkdir dir="${doc.dir}"/>
+      <scaladoc destdir="${doc.dir}" srcdir="${src.dir}" classpathref="build.classpath"/>
+    </target>
 
-    <target name="clean-build" depends="clean,jar"/>
+    <target name="clean-build" depends="clean,jar,doc"/>
 </project>
 

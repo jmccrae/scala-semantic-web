@@ -235,7 +235,7 @@ object TurtleParser {
     private def deparse(ps:List[Any]) : List[Statement] = {
       ps.flatMap(res => res match {
         case x : Statement => List(x)
-        case x : List[Any] => deparse(x)
+        case x : List[_] => deparse(x)
         case _ => Nil
       })
     }
@@ -328,11 +328,12 @@ object TurtleParser {
       
       def triples = subject ~ predicateObjectList ^^ { case (node,stats) ~ y => makeTriple(node,y) ::: stats }
       
-      def predicateObjectList = repsep(verb ~ objectList , ";" )
+      def predicateObjectList : Parser[List[~[NamedNode,List[Tuple2[Value,List[Statement]]]]]] =
+        repsep(verb ~ objectList , ";" )
       
-      def objectList = repsep( objct, "," )
+      def objectList : Parser[List[Tuple2[Value,List[Statement]]]] = repsep( objct, "," )
       
-      def verb = predicate | literal("a") ^^ { case _ => RDF._type }
+      def verb : Parser[NamedNode] = predicate | literal("a") ^^ { case _ => RDF._type }
       
       def comment = """#([^\n])*"""r
       
@@ -340,7 +341,8 @@ object TurtleParser {
       
       def predicate = resource
       
-      def objct = resource | blank | lit
+      def objct : Parser[Tuple2[Value,List[Statement]]] = resource ^^ { case x => (x,Nil) } | blank | 
+        lit ^^ { case x => (x,Nil) }
       
       def lit = datatypeString ^^ { case x ~ y => new TypedLiteral(x.toString, y) } |  
         quotedString ~ (language ?) ^^ {
@@ -377,19 +379,16 @@ object TurtleParser {
       }
           
       def blankNodeCollection : Parser[Tuple2[Resource, List[Statement]]] = 
-      "(" ~> collection ^^ { 
-          case Some(x) => {
-            val bn = new BlankNode("id" + abs(rand.nextLong))
-            (bn,makeCollection(bn,x)) 
-          }
-          case None => (new BlankNode("id" + abs(rand.nextLong)),Nil) 
+      "(" ~> collection ^^ { x =>
+         val bn = new AnonymousNode
+         (bn,makeCollection(bn,x)) 
       }
       
-      def itemList = rep( objct )
+      def itemList : Parser[List[Tuple2[Value,List[Statement]]]] = objct*
       
-      def collection = (itemList ?) <~ ")"
+      def collection : Parser[List[Tuple2[Value,List[Statement]]]] = (itemList) <~ ")"
       
-      def resource = uriref | qname
+      def resource : Parser[NamedNode] = uriref | qname
       
       def nodeID = name ^^ { case x:String => new BlankNode(x) }
       
@@ -410,77 +409,34 @@ object TurtleParser {
       
       def prefixName = regex("""[A-Za-z][^ <>:]*"""r) ^^ { case x => namespaces(x) }
       
-      //def relativeURI = "((\\\\u[0-9a-eA-E]{4})|(\\\\U[0-9a-eA-E]{8})|[\u0020-\u0058\\\u005d-\uffff])+"
-      //def relativeURI = """[A-Za-z0-9_+:#]+"""r
-      def relativeURI = """[^ <>]+"""r
+      def relativeURI = """[^ <>{}\|^`\\]+"""r
       
       def quotedString = longString | string
       
       //def string = "\"(([^\"])|(\\\"))+\""r
-      def string = regex("\"[^\"]*\""r) ^^ { case x => x.substring(1,x.length-1) }
+      def string = regex(("\"" + """(([^"])|(\"))*?""" + "\"")r) ^^ { case x => x.substring(1,x.length-1) }
       
-      def longString = regex(("\"\"\"" + """(([^"])|(\"))+?""" + "\"\"\"")r) ^^ { case x => x.substring(3,x.length - 3) }
+      def longString = regex(("\"\"\"" + """(([^"])|(\"))*?""" + "\"\"\"")r) ^^ { case x => x.substring(3,x.length - 3) }
       
-      private def makeTriple(subject:Resource,objList:List[Any]) : List[Statement]  = {
-        objList match {
-          case (head : ~[NamedNode,List[Any]]) :: rest => makeTriple(subject,head) ::: makeTriple(subject,rest)
-          case (head : Statement) :: rest => head :: makeTriple(subject,rest)
-          case (head : Tuple2[NamedNode,List[Any]]) :: rest => throw new IllegalArgumentException(head.toString)
-          case Nil => Nil
+      private def makeTriple(subject:Resource, 
+      predObjs : List[~[NamedNode,List[Tuple2[Value,List[Statement]]]]]) : List[Statement] = {
+        predObjs.flatMap{
+          case pred ~ objs => objs.flatMap { case (obj,stats) => Statement(subject,pred,obj) :: stats }
         }
       }
       
-      private def makeTriple(subject:Resource, predObj : ~[NamedNode,List[Any]]) : List[Statement] = {
-        predObj match {
-          case x ~ y => makeTriple(subject,x,y)
-        }
-      } 
-  
-      private def makeTriple(subject:Resource, pred:NamedNode, objs:List[Any]) : List[Statement] = {
-        objs match {
-          case head :: rest => makeTriple(subject,pred,head) ::: makeTriple(subject,pred,rest)
-          case Nil => Nil
-        }
-      }
-      
-      private def makeTriple(subject:Resource, pred:NamedNode, obj:Any) : List[Statement] = {
-        obj match {
-          case objct : Value => List((subject,pred,objct)rdf)
-          case (x : BlankNode, y : List[~[NamedNode,List[Any]]]) => ((subject,pred,x)rdf) :: makeTriple(x,y)
-          case (x : BlankNode, Collection(y)) => ((subject,pred,x)rdf) :: makeCollection(x,y)
-          case _ => throw new RuntimeException("parser has a flaw")
-        }
-      }
-      
-      private def makeCollection(node:Resource, elems:List[Any]) : List[Statement] = {
+      private def makeCollection(node:Resource, elems:List[Tuple2[Value,List[Statement]]]) 
+      : List[Statement] = {
         elems match {
-          case head :: Nil => head match {
-            case x:Value => { 
-              ((node,RDF.rest, RDF.nil)rdf) :: List((node, RDF.first, x)rdf)
-            }
-            case (x : BlankNode, y : List[~[NamedNode,List[Any]]]) => {
-              ((node,RDF.rest,RDF.nil)rdf) :: ((node,RDF.first,x)rdf) :: makeTriple(x,y)
-            }
-            case (x : BlankNode, Collection(y)) => {
-            ((node,RDF.rest,RDF.nil)rdf) :: ((node,RDF.first,x)rdf) :: makeCollection(x,y)  }
-            case _ => throw new RuntimeException("parser has a flaw")
-            
+          case (obj,stats) :: Nil => {
+            (node ~> RDF.rest ~> RDF.nil) :: (node ~> RDF.first ~> obj) :: stats
           }
-          case head :: rest => head match {
-            case x:Value => { 
-              val bn = BlankNode("id" + abs(rand.nextLong)) 
-              ((node,RDF.rest, bn)rdf) :: ((node, RDF.first, x)rdf) :: makeCollection(bn,rest)
-            }
-            case (x : BlankNode, y : List[~[NamedNode,List[Any]]]) => {
-              val bn = BlankNode("id" + abs(rand.nextLong))
-              ((node,RDF.rest,bn)rdf) :: ((node,RDF.first,x)rdf) :: makeTriple(x,y) ::: makeCollection(bn,rest)
-            }
-            case (x : BlankNode, Collection(y)) => {
-              val bn = BlankNode("id" + abs(rand.nextLong))
-            ((node,RDF.rest,bn)rdf) :: ((node,RDF.first,x)rdf) :: makeCollection(x,y) ::: makeCollection(bn,rest) }
-            case _ => throw new RuntimeException("parser has a flaw")
+          case (obj, stats) :: tail => {
+            val next = new AnonymousNode
+            (node ~> RDF.rest ~> next) :: (node ~> RDF.first ~> obj) :: 
+            (makeCollection(next,tail) ::: stats)
           }
-          case Nil => List((node, RDF.rest, RDF.nil)rdf)
+          case Nil => List(node ~> RDF.rest ~> RDF.nil)
         }
       }
     }
