@@ -33,10 +33,10 @@ object NTriples {
      * @param doc The N-Triples document as a string
      * @return The list of statements as in the Turtle document
      */
-    def parse(doc:String) = {
+    def parse(doc:String) : List[Statement] = {
       val parser = new Parser
       parser.parseAll(parser.doc, doc) match {
-        case parser.Success(p : List[Statement], _) => p
+        case parser.Success(p, _) => p
         case parser.Failure(msg, in) => throw new RuntimeException(msg + " @ " + getNextN(20,in))
         case _ => throw new RuntimeException("Unexpected parse result")
       }
@@ -46,10 +46,10 @@ object NTriples {
      * @param doc The N-Triples document as a stream
      * @return The list of statements as in the N-Triples document
      */
-    def parse(in: java.io.Reader) = {
+    def parse(in: java.io.Reader) : List[Statement] = {
       val parser = new Parser
       parser.parseAll(parser.doc, in) match {
-        case parser.Success(p : List[Statement], _) => p
+        case parser.Success(p, _) => p
         case parser.Failure(msg, in) => throw new RuntimeException(msg + " @ " + getNextN(20,in))
         case _ => throw new RuntimeException("Unexpected parse result")
       }
