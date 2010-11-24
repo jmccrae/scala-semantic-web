@@ -23,7 +23,7 @@
       <h4 class="signature" id="signature">
       <span class="kind">class</span>
       <span class="symbol">
-        <span class="name">AnonymousNode</span><span class="result"> extends <a href="Resource.html" class="extype" name="scala.rdf.Resource">Resource</a></span>
+        <span class="name">AnonymousNode</span><span class="result"> extends <a href="BlankNode.html" class="extype" name="scala.rdf.BlankNode">BlankNode</a></span>
       </span>
       </h4>
       <div class="fullcomment" id="comment"><div class="comment cmt"><p>An anonymous blank RDF resource.
@@ -42,7 +42,7 @@
           <div id="ancestors">
                 <span class="filtertype">Inherited</span>
                 <ol><li class="hideall">Hide All</li><li class="showall">Show all</li></ol>
-                <ol id="linearization"><li class="in" name="scala.rdf.Resource">Resource</li><li class="in" name="scala.rdf.Value">Value</li><li class="in" name="scala.AnyRef">AnyRef</li><li class="in" name="scala.Any">Any</li></ol>
+                <ol id="linearization"><li class="in" name="scala.rdf.BlankNode">BlankNode</li><li class="in" name="scala.Product">Product</li><li class="in" name="scala.Equals">Equals</li><li class="in" name="scala.rdf.Resource">Resource</li><li class="in" name="scala.rdf.Value">Value</li><li class="in" name="scala.AnyRef">AnyRef</li><li class="in" name="scala.Any">Any</li></ol>
               </div>
           <div id="visbl">
             <span class="filtertype">Visibility</span>
@@ -212,6 +212,19 @@ part of compilation it is not possible to check whether the contents of the list
             
           </div>
           
+    </li><li visbl="pub" name="scala.rdf.BlankNode#canEqual">
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">canEqual</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: <a href="BlankNode.html" class="extype" name="scala.rdf.BlankNode">BlankNode</a> → Equals
+        </div></div>
+          
     </li><li visbl="prt" name="scala.AnyRef#clone">
       <h4 class="signature">
       <span class="kind">def</span>
@@ -267,7 +280,7 @@ should be equal to each other (<code>o1 == o2</code>) and they should hash to th
             
           </div>
           
-    </li><li visbl="pub" name="scala.AnyRef#equals">
+    </li><li visbl="pub" name="scala.rdf.BlankNode#equals">
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
@@ -288,7 +301,7 @@ that are &quot;equal&quot; (<code>o1.equals(o2)</code> returns <code>true</code>
 scala.Int
 (<code>o1.hashCode.equals(o2.hashCode)</code>).
 </p></div><dl class="paramcmts block"><dt class="param">arg0</dt><dd class="cmt"><p>the object to compare against this object for equality.</p></dd><dt>returns</dt><dd class="cmt"><p><code>true</code> if the receiver object is equivalent to the argument; <code>false</code> otherwise.</p></dd></dl><div class="block">
-          definition classes: AnyRef → Any
+          definition classes: <a href="BlankNode.html" class="extype" name="scala.rdf.BlankNode">BlankNode</a> → Equals → AnyRef → Any
         </div>
             
             
@@ -339,7 +352,7 @@ there are no more references to the object.</p><p>The details of when and if the
             
           </div>
           
-    </li><li visbl="pub" name="scala.AnyRef#hashCode">
+    </li><li visbl="pub" name="scala.rdf.BlankNode#hashCode">
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
@@ -354,13 +367,26 @@ However, it is required that if two objects are equal (<code>o1.equals(o2)</code
 identical hash codes (<code>o1.hashCode.equals(o2.hashCode)</code>).  Therefore, when overriding this method, be sure
 to verify that the behavior is consistent with the <code>equals</code> method.
 </p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>the hash code value for the object.</p></dd></dl><div class="block">
-          definition classes: AnyRef → Any
+          definition classes: <a href="BlankNode.html" class="extype" name="scala.rdf.BlankNode">BlankNode</a> → AnyRef → Any
         </div>
             
             
             
             
           </div>
+          
+    </li><li visbl="pub" name="scala.rdf.BlankNode#id">
+      <h4 class="signature">
+      <span class="kind">val</span>
+      <span class="symbol">
+        <span class="name">id</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: <a href="BlankNode.html" class="extype" name="scala.rdf.BlankNode">BlankNode</a>
+        </div></div>
           
     </li><li visbl="pub" name="scala.Any#isInstanceOf">
       <h4 class="signature">
@@ -446,6 +472,73 @@ possible to check whether the contents of the list are of the requested typed.
             
           </div>
           
+    </li><li visbl="pub" name="scala.rdf.BlankNode#productArity">
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">productArity</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: <a href="BlankNode.html" class="extype" name="scala.rdf.BlankNode">BlankNode</a> → Product
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.rdf.BlankNode#productElement">
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">productElement</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="scala.Any">Any</span></span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: <a href="BlankNode.html" class="extype" name="scala.rdf.BlankNode">BlankNode</a> → Product
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.Product#productElements">
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name deprecated">productElements</span><span class="result">: <span class="extype" name="scala.collection.Iterator">Iterator</span>[<span class="extype" name="scala.Any">Any</span>]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: Product
+        </div><div class="block"><ol>deprecated:
+          <li><p>use productIterator instead</p></li>
+        </ol></div></div>
+          
+    </li><li visbl="pub" name="scala.Product#productIterator">
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">productIterator</span><span class="result">: <span class="extype" name="scala.collection.Iterator">Iterator</span>[<span class="extype" name="scala.Any">Any</span>]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: Product
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.rdf.BlankNode#productPrefix">
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">productPrefix</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: <a href="BlankNode.html" class="extype" name="scala.rdf.BlankNode">BlankNode</a> → Product
+        </div></div>
+          
     </li><li visbl="pub" name="scala.AnyRef#synchronized">
       <h4 class="signature">
       <span class="kind">def</span>
@@ -461,7 +554,7 @@ possible to check whether the contents of the list are of the requested typed.
           definition classes: AnyRef
         </div></div>
           
-    </li><li visbl="pub" name="scala.rdf.AnonymousNode#toString">
+    </li><li visbl="pub" name="scala.rdf.BlankNode#toString">
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
@@ -472,7 +565,7 @@ possible to check whether the contents of the list are of the requested typed.
             <p class="shortcomment cmt">Returns a string representation of the object.</p>
             <div class="fullcomment"><div class="comment cmt"><p>Returns a string representation of the object.</p><p>The default representation is platform dependent.
 </p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>a string representation of the object.</p></dd></dl><div class="block">
-          definition classes: <a href="" class="extype" name="scala.rdf.AnonymousNode">AnonymousNode</a> → AnyRef → Any
+          definition classes: <a href="BlankNode.html" class="extype" name="scala.rdf.BlankNode">BlankNode</a> → AnyRef → Any
         </div>
             
             

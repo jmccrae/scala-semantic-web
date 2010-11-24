@@ -49,22 +49,48 @@ class TurtlePrinter(tabWidth : Int = 2, postStatSpacing : Int = 2, maxObjs : Int
     
     out.append("\n".rep(postStatSpacing-1))
     
-    for(stat <- statList) {
-      if(theMap.contains(stat.subj)) {
-        val head = theMap(stat.subj)
-        theMap.remove(stat.subj)
+    val blanks = theMap.keySet filter { _.isInstanceOf[BlankNode] }
+    val nonHeads = statList filter { stat => stat.pred == RDF.rest && stat.obj.isInstanceOf[Resource] } map
+      { stat => stat.obj.asInstanceOf[Resource] }
+    val blankHeads = blanks -- nonHeads
+    
+    for(stat <- (statList.filter { stat => stat.subj.isInstanceOf[NamedNode] })) {
+      writeNode(stat.subj, theMap, dupes, out);
+    }
+    for(head <- blankHeads) {
+      writeNode(head, theMap, dupes, out);
+    }
+  }
+  
+  private def writeNode(res : Resource, theMap : HashMap[Resource, HashMap[NamedNode, HashSet[Value]]],
+  dupes : HashSet[BlankNode], 
+  out : Appendable) {
+    
+      if(theMap.contains(res)) {
+        val head = theMap(res)
+        theMap.remove(res)
         
-        out.append(stat.subj.toString + " ")
+        out.append(stringRes(res) + " ")
         
         formatPO(theMap, head, dupes, out, 1)
         
         out.append(" ." + "\n".rep(postStatSpacing))
       }
+  }
+  
+  private def stringRes(res : Resource) : String = {
+    res match {
+      case qn : QName => if(!qn.suffix.matches(TurtleParser.nameStartChar + TurtleParser.nameChars + "*")) {
+        return "<" + qn.uri.toString + ">"
+      } else {
+        return qn.toString()
+      }
+      case x => x.toString()
     }
   }
   
   private def buildMap(statList : List[Statement]) = {
-    val theMap = new HashMap[Resource, HashMap[NamedNode, LinkedList[Value]]]();
+    val theMap = new HashMap[Resource, HashMap[NamedNode, HashSet[Value]]]();
     val nameSpaces = new HashSet[NameSpace]()
     val mentioned = new HashSet[BlankNode]()
     val dupes = new HashSet[BlankNode]()
@@ -72,13 +98,13 @@ class TurtlePrinter(tabWidth : Int = 2, postStatSpacing : Int = 2, maxObjs : Int
     for(stat <- statList) {
       if(theMap.contains(stat.subj)) {
         if(theMap(stat.subj).contains(stat.pred)) {
-          theMap(stat.subj)(stat.pred) :+= (stat.obj)
+          theMap(stat.subj)(stat.pred) += (stat.obj)
         } else {
-          theMap(stat.subj).put(stat.pred, new LinkedList(stat.obj, new LinkedList()))
+          theMap(stat.subj).put(stat.pred, (HashSet[Value]() + stat.obj))
         }
       } else {
         theMap.put(stat.subj, new HashMap())
-        theMap(stat.subj) += (stat.pred -> new LinkedList(stat.obj, new LinkedList()))
+        theMap(stat.subj) += (stat.pred -> (HashSet[Value]() + stat.obj))
       }
       
       stat.subj match {
@@ -104,8 +130,8 @@ class TurtlePrinter(tabWidth : Int = 2, postStatSpacing : Int = 2, maxObjs : Int
     (theMap,nameSpaces,dupes)
   }
   
-  private def formatPO(theMap : HashMap[Resource, HashMap[NamedNode, LinkedList[Value]]], 
-  head : HashMap[NamedNode, LinkedList[Value]], 
+  private def formatPO(theMap : HashMap[Resource, HashMap[NamedNode, HashSet[Value]]], 
+  head : HashMap[NamedNode, HashSet[Value]], 
   dupes : HashSet[BlankNode],
   out : Appendable, 
   tabDepth : Int) {
@@ -114,10 +140,10 @@ class TurtlePrinter(tabWidth : Int = 2, postStatSpacing : Int = 2, maxObjs : Int
     while(iter.hasNext) {
       val (pred,objs) = iter.next
       if(firstPO) {
-        out.append(pred.toString + " ")
+        out.append(stringRes(pred) + " ")
         firstPO = false
       } else {
-        out.append("\n" + " ".rep(tabWidth * tabDepth) + pred.toString + " ")
+        out.append("\n" + " ".rep(tabWidth * tabDepth) + stringRes(pred) + " ")
       }
       var i = 0
       val iter2 = objs.iterator
@@ -135,22 +161,22 @@ class TurtlePrinter(tabWidth : Int = 2, postStatSpacing : Int = 2, maxObjs : Int
         if(iter2.hasNext) {
           out.append(" ,")
         }
-        if(iter.hasNext) {
-          out.append(" ;")
-        }
+      }
+      if(iter.hasNext) {
+        out.append(" ;")
       }
     }
   }
   
-  private def formatObj(obj : Value, theMap : HashMap[Resource, HashMap[NamedNode, LinkedList[Value]]],  
+  private def formatObj(obj : Value, theMap : HashMap[Resource, HashMap[NamedNode, HashSet[Value]]],  
   dupes : HashSet[BlankNode],
   out : Appendable, 
   tabDepth : Int) : Boolean =
     obj match {
-      case x : NamedNode => { out.append(x.toString); false }
+      case x : NamedNode => { out.append(stringRes(x)); false }
       case x : BlankNode => { 
         if(!theMap.contains(x) || theMap(x).size == 0 || dupes.contains(x)) {
-          out.append(x.toString);
+          out.append(stringRes(x));
           false
         } else if(theMap(x).size == 2 &&
         theMap(x).contains(RDF.first) &&
@@ -158,11 +184,20 @@ class TurtlePrinter(tabWidth : Int = 2, postStatSpacing : Int = 2, maxObjs : Int
           out.append("( ")
           var node : Resource = x
           do {
-            formatObj(theMap(node)(RDF.first)(0),theMap,dupes,out,tabDepth+1)
+            if(!theMap.contains(node)) {
+              println(theMap)
+              node == RDF.nil
+            } else {
+            if(!theMap(node).contains(RDF.first) ||
+               !theMap(node).contains(RDF.rest)) {
+              throw new IllegalArgumentException("Invalid list at " + node)
+            }
+            formatObj(theMap(node)(RDF.first).head,theMap,dupes,out,tabDepth+1)
             out.append("\n"+ " ".rep(tabWidth * (tabDepth + 1)))
             val old = node
-            node = theMap(node)(RDF.rest)(0).asInstanceOf[Resource]
+            node = theMap(node)(RDF.rest).head.asInstanceOf[Resource]
             theMap.remove(old)
+            }
           } while(node != RDF.nil)
           out.append(")")
           true
@@ -239,76 +274,21 @@ object TurtleParser {
         case _ => Nil
       })
     }
-      /*deparse2(stats,dirs.asInstanceOf[List[Directive]])
-    }
+           
+    val pnChars =  	"""[A-Za-z%0-9\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]"""
   
-    private def deparse2(p:List[Any], dirs:List[Directive]) : List[Statement] = {
-      p match {
-        case head :: rest => (head match {
-          case x:List[_] => deparse2(x,dirs)
-          case x:Statement => List(x) //List(applyNameSpace(x,dirs))
-          case _ => Nil
-        }) ::: deparse2(rest, dirs)
-        case Nil => Nil
-      }
-    }*/
-    /*
-    private def applyNameSpace(x:Statement, dirs:List[Directive]) : Statement = {
-      x match {
-        case Statement(subj, pred, obj) => Statement(applyNameSpace1(subj,dirs),
-                                                     applyNameSpace2(pred,dirs),
-                                                     applyNameSpace3(obj,dirs))
-      }
-    }
-    
-    private def applyNameSpace1(x:Resource, dirs:List[Directive]) : Resource = {
-      x match {
-        case y : QName => applyNS2(y, dirs)
-        case y => y
-      }
-    }
-    
-    private def applyNameSpace2(x:NamedNode, dirs:List[Directive]) : NamedNode = {
-      x match {
-        case y : QName => applyNS2(y, dirs)
-        case y => y
-      }
-    }
-    
-    private def applyNameSpace3(x:Value, dirs:List[Directive]) : Value = {
-      x match {
-        case y : QName => applyNS2(y, dirs)
-        case y => y
-      }
-    }
-    
-    private def applyNS2(y:QName, dirs:List[Directive]) : QName = {
-      dirs match {
-        case head :: rest => head match {
-          case x: BaseDirective => if(y.nameSpace.id == "") { 
-            NameSpace("",x.base) & y.suffix 
-          } else {
-            applyNS2(y,rest)
-          }
-          case PrefixDirective(Some(x),prefix) => if(y.nameSpace.id == x) {
-            NameSpace(x.id,prefix) & y.suffix
-          } else {
-            applyNS2(y,rest)
-          }
-          case PrefixDirective(None,prefix) => if(y.nameSpace.id == "") { 
-            NameSpace("",prefix) & y.suffix 
-          } else {
-            applyNS2(y,rest)
-          }
-        }
-        case Nil => y
-      }
-    }*/
-    
+    val nameChars =
+  "[A-Za-z_%0-9\u00B7\u0300-\u036F\u203F-\u2040\u00B7\u0300-\u036F\u203F-\u2040\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\\-]"
+      
+    val nameStartChar = "[A-Z_a-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]"
+  
+    val nameStartChar2 =
+    "[A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]"
+      
     /**
      * The parser as a Scala combinator parser
      */
-    class Parser extends JavaTokenParsers {
+    private[turtle] class Parser extends JavaTokenParsers {
            
       var namespaces = Map[String,NameSpace]()
       
@@ -333,7 +313,7 @@ object TurtleParser {
       
       def objectList : Parser[List[Tuple2[Value,List[Statement]]]] = repsep( objct, "," )
       
-      def verb : Parser[NamedNode] = predicate | literal("a") ^^ { case _ => RDF._type }
+      def verb : Parser[NamedNode] = literal("a") ^^ { case _ => RDF._type } | predicate
       
       def comment = """#([^\n])*"""r
       
@@ -392,22 +372,27 @@ object TurtleParser {
       
       def nodeID = name ^^ { case x:String => new BlankNode(x) }
       
-      def language = """@[a-z][a-z0-9]*"""r
+      def language = ("""@[a-z][a-z0-9\-A-Z]*"""r) ^^ { case x => x.substring(1) }
       
       def qname = (((prefixName ?) <~ ":") ~ name) ^^ { 
         case Some(x) ~ y  => x & y
         case None ~ y => namespaces.getOrElse("",RDF.base) & y
         }  
-      
+     
       def uriref = ("<" ~> relativeURI <~ ">") ^^ { case x:String => x.uri }
       
       def uriref2 = ("<" ~> relativeURI <~ ">")
       
-      def name = """[A-Za-z_][^ <>]*"""r
+      def name = (nameStartChar + nameChars + "*")r//"""[A-Za-z_][^ <>]*"""r
       
-      def prefixName2 = regex("""[A-Za-z][^ <>:]*"""r)
-      
-      def prefixName = regex("""[A-Za-z][^ <>:]*"""r) ^^ { case x => namespaces(x) }
+      def prefixName2 = regex((nameStartChar2 + pnChars + "*")r)//"""[A-Za-z][^ <>:]*"""r)
+       
+      def prefixName = regex((nameStartChar2 + pnChars + "*")r) ^^ { case x => if(namespaces.contains(x)) {
+        namespaces(x) 
+      } else { 
+        throw new NameSpaceException(x) 
+      } }
+      //"""[A-Za-z][^ <>:]*"""r) ^^ { case x => namespaces(x) }
       
       def relativeURI = """[^ <>{}\|^`\\]+"""r
       
@@ -439,7 +424,10 @@ object TurtleParser {
           case Nil => List(node ~> RDF.rest ~> RDF.nil)
         }
       }
+      
+      
     }
+    class NameSpaceException(str : String) extends RuntimeException(str)
 }
 /*
 object TestParser {

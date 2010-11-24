@@ -53,9 +53,7 @@ case class BlankNode(val id:String) extends Resource {
 /**
  * An anonymous blank RDF resource.
  */
-class AnonymousNode extends Resource {
-  override def toString= "[ ]"
-}
+class AnonymousNode extends BlankNode(Math.abs((new java.util.Random()).nextLong()).toString()) 
 
 /**
  * An RDF statement (triple).
@@ -91,6 +89,12 @@ case class NameSpace(val id:String, val prefix:String) {
  */
 case class URIRef(val uri:URI) extends NamedNode {
   override def toString = "<" + uri.toString + ">"
+  override def equals(obj : Any) = obj match {
+    case URIRef(uri2) => uri == uri2
+    case QName(ns2,s2) => (ns2.prefix + s2) == (uri.toString)
+    case _ => false
+  }
+  override def hashCode = uri.toString.hashCode 
 }
 
 /**
@@ -101,6 +105,13 @@ case class URIRef(val uri:URI) extends NamedNode {
 case class QName(val nameSpace:NameSpace,val suffix:String) extends NamedNode {
   def uri = new URI(nameSpace.prefix + suffix)
   override def toString = nameSpace.id + ":" + suffix
+  override def equals(obj : Any) = obj match {
+    case URIRef(uri) => (nameSpace.prefix + suffix) == (uri.toString)
+    case QName(ns2,s2) => nameSpace == ns2 && suffix == s2
+    case _ => false
+  }
+  
+  override def hashCode = (nameSpace.prefix + suffix).hashCode 
 }
 
 /**
