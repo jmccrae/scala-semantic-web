@@ -96,7 +96,14 @@ object RDFXML {
           subject = Some(genid())
           bnIDs += 1
         }
-        Some(ResStats(subject.get,
+        
+        val typeDef = if(!(node.prefix == "rdf" && node.label == "Description")) {
+           List(Statement(subject.get, RDF._type, resolve(node.prefix, node.label)))
+        } else {
+           Nil
+        }
+        
+        Some(ResStats(subject.get, typeDef :::
           (node.child flatMap { childNode => propertyElt(childNode,subject.get) }).toList))
       }
     }
@@ -239,6 +246,10 @@ object RDFXML {
           case None => URIRef(URI.create(value))
         }
       }
+    }
+    
+    def resolve(prefix : String, value : String) = {
+      nameSpace(prefix)&value 
     }
     
     val bNodeRegex = """genid([0-9])+"""r
