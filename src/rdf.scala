@@ -53,7 +53,7 @@ case class BlankNode(val id:String) extends Resource {
 /**
  * An anonymous blank RDF resource.
  */
-class AnonymousNode extends BlankNode(Math.abs((new java.util.Random()).nextLong()).toString()) 
+class AnonymousNode extends BlankNode(scala.math.abs((new java.util.Random()).nextLong()).toString()) 
 
 /**
  * An RDF statement (triple).

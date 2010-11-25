@@ -349,7 +349,7 @@ case class PredicateObject(val pred : NamedNode, val objs : List[RDFValue]) {
  * An RDF Collection. Note this object is only the first blank node in the collection
  * @param elems The elements in the collection
  */
-case class Collection(val elems : List[RDFValue]) extends AnonymousNode {
+class Collection(val elems : List[RDFValue]) extends AnonymousNode {
   import scala.rdf.RDF._
   
   def filter(p : (RDFValue) => Boolean) : List[RDFValue] = elems.flatMap{ x => x match {
@@ -387,7 +387,7 @@ case class Collection(val elems : List[RDFValue]) extends AnonymousNode {
  * A blank node defined with a set of predicates and objects
  * @param body The body of the blank node declaration
  */
-case class BNodeList(val body : List[PredicateObject]) extends AnonymousNode {
+class BNodeList(val body : List[PredicateObject]) extends AnonymousNode {
   override def toString = "[ " + body.mkString(" ;\n") + " ]"
   def filter(p : (RDFValue) => Boolean) : List[RDFValue] = body.flatMap(_.filter(p))
   
@@ -726,11 +726,11 @@ object SPARQLParser  {
     
     def verb = varOrNamedNode | "a" ^^^ RDF._type
     
-    def triplesNode = collection | blankNodePropertyList
+    def triplesNode : Parser[Resource] = collection | blankNodePropertyList
     
-    def blankNodePropertyList = "[" ~> propertyListNotEmpty <~ "]" ^^ { BNodeList(_) }
+    def blankNodePropertyList : Parser[Resource] = "[" ~> propertyListNotEmpty <~ "]" ^^ { new BNodeList(_) }
     
-    def collection = "(" ~> (graphTerm+) <~ ")" ^^ { Collection(_) }
+    def collection : Parser[Resource] = "(" ~> (graphTerm+) <~ ")" ^^ { new Collection(_) }
     
     def graphNode : Parser[Resource] = Var | triplesNode | blankNode | uriRef
     

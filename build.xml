@@ -41,7 +41,7 @@
 
     <target name="jar" depends="compile">
         <mkdir dir="${jar.dir}"/>
-        <jar destfile="${jar.dir}/${ant.project.name}.jar" basedir="${classes.dir}" manifest="./manifest.mf">
+        <jar destfile="${jar.dir}/${ant.project.name}.jar" basedir="${classes.dir}" manifest="./MANIFEST.MF">
             
         </jar>
     </target>
