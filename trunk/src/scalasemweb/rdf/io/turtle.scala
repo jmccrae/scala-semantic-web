@@ -1,8 +1,20 @@
-package scala.rdf.turtle
+package scalasemweb.rdf.io
 
-import scala.rdf._
+import scalasemweb.rdf.model._
 import java.io._
 import scala.collection.mutable.{HashMap,LinkedList,HashSet}
+
+object Turtle extends RDFWriter with RDFParser {
+  private val printer = new TurtlePrinter()
+  
+  def write(statSet : StatementSet[Statement]) : String = printer.format(statSet)
+  
+  def write(statSet : StatementSet[Statement], out : Appendable) { printer.format(statSet,out) }
+  
+  def parse(doc:String) : StatementSet[Statement] = TurtleParser.parse(doc)
+  
+  def parse(in: java.io.Reader) : StatementSet[Statement] = TurtleParser.parse(in)
+}
 
 /**
  * Create a Turtle pretty printer
@@ -25,7 +37,7 @@ class TurtlePrinter(tabWidth : Int = 2, postStatSpacing : Int = 2, maxObjs : Int
    * Format a list of statements in Turtle
    * @param statList The list of statements
    */
-  def format(statList : List[Statement]) : String = {
+  def format(statList : StatementSet[Statement]) : String = {
     val writer = new StringWriter();
     format(statList,writer)
     writer.toString
@@ -34,7 +46,7 @@ class TurtlePrinter(tabWidth : Int = 2, postStatSpacing : Int = 2, maxObjs : Int
   /** Format a list of statements in Turtle
    * @param out The appendable buffer to add the result to
    */
-  def format(statList : List[Statement], out : Appendable) : Unit = {
+  def format(statList : StatementSet[Statement], out : Appendable) : Unit = {
     val (theMap,nameSpaces,dupes) = buildMap(statList) 
     
     nameSpaces += RDF
@@ -89,7 +101,7 @@ class TurtlePrinter(tabWidth : Int = 2, postStatSpacing : Int = 2, maxObjs : Int
     }
   }
   
-  private def buildMap(statList : List[Statement]) = {
+  private def buildMap(statList : StatementSet[Statement]) = {
     val theMap = new HashMap[Resource, HashMap[NamedNode, HashSet[Value]]]();
     val nameSpaces = new HashSet[NameSpace]()
     val mentioned = new HashSet[BlankNode]()
@@ -225,7 +237,6 @@ import java.util.Random
  * A Turtle parser. Reads a turtle file into a list of statements
  */
 object TurtleParser {
-    import scala.rdf.sugar._
   
     private[TurtleParser] val rand = new Random()
     
@@ -243,9 +254,9 @@ object TurtleParser {
     def parse(doc:String) = {
       val parser = new Parser
       parser.parseAll(parser.turtleDoc, doc) match {
-        case parser.Success(p : List[_], _) => deparse(p)
-        case parser.Failure(msg, in) => throw new RuntimeException(msg + " @ " + getNextN(20,in))
-        case _ => throw new RuntimeException("Unexpected parse result")
+        case parser.Success(p : List[_], _) => new StdStatementSet(deparse(p).toSet)
+        case parser.Failure(msg, in) => throw new RDFTurtleParseException(msg + " @ " + getNextN(20,in))
+        case _ => throw new RDFTurtleParseException("Unexpected parse result")
       }
     }    
     
@@ -256,9 +267,9 @@ object TurtleParser {
     def parse(in: java.io.Reader) = {
       val parser = new Parser
       parser.parseAll(parser.turtleDoc, in) match {
-        case parser.Success(p : List[_], _) => deparse(p)
-        case parser.Failure(msg, in) => throw new RuntimeException(msg + " @ " + getNextN(20,in))
-        case _ => throw new RuntimeException("Unexpected parse result")
+        case parser.Success(p : List[_], _) => new StdStatementSet(deparse(p).toSet)
+        case parser.Failure(msg, in) => throw new RDFTurtleParseException(msg + " @ " + getNextN(20,in))
+        case _ => throw new RDFTurtleParseException("Unexpected parse result")
       }
     }
     
@@ -275,20 +286,20 @@ object TurtleParser {
       })
     }
            
-    val pnChars =  	"""[A-Za-z%0-9\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]"""
+    private[io] val pnChars =  	"""[A-Za-z%0-9\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]"""
   
-    val nameChars =
+    private[io] val nameChars =
   "[A-Za-z_%0-9\u00B7\u0300-\u036F\u203F-\u2040\u00B7\u0300-\u036F\u203F-\u2040\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\\-]"
       
-    val nameStartChar = "[A-Z_a-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]"
+    private[io] val nameStartChar = "[A-Z_a-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]"
   
-    val nameStartChar2 =
+    private[io] val nameStartChar2 =
     "[A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]"
       
     /**
      * The parser as a Scala combinator parser
      */
-    private[turtle] class Parser extends JavaTokenParsers {
+    private class Parser extends JavaTokenParsers {
            
       var namespaces = Map[String,NameSpace]()
       
@@ -360,7 +371,7 @@ object TurtleParser {
           
       def blankNodeCollection : Parser[Tuple2[Resource, List[Statement]]] = 
       "(" ~> collection ^^ { x =>
-         val bn = new AnonymousNode
+         val bn = AnonymousNode
          (bn,makeCollection(bn,x)) 
       }
       
@@ -414,29 +425,20 @@ object TurtleParser {
       : List[Statement] = {
         elems match {
           case (obj,stats) :: Nil => {
-            (node ~> RDF.rest ~> RDF.nil) :: (node ~> RDF.first ~> obj) :: stats
+            (node %> RDF.rest %> RDF.nil) :: (node %> RDF.first %> obj) :: stats
           }
           case (obj, stats) :: tail => {
-            val next = new AnonymousNode
-            (node ~> RDF.rest ~> next) :: (node ~> RDF.first ~> obj) :: 
+            val next = AnonymousNode()
+            (node %> RDF.rest %> next) :: (node %> RDF.first %> obj) :: 
             (makeCollection(next,tail) ::: stats)
           }
-          case Nil => List(node ~> RDF.rest ~> RDF.nil)
+          case Nil => List(node %> RDF.rest %> RDF.nil)
         }
       }
       
       
     }
-    class NameSpaceException(str : String) extends RuntimeException(str)
+    class NameSpaceException(str : String) extends RDFParseException(str)
 }
-/*
-object TestParser {
-  import java.io._ 
-  
-  def main(args:Array[String]) {
-    val parser = new TurtleParser
-    val in = new FileReader("ifrs-lemon-short.rdf")
-    val model = parser.parse(in)
-    println(model.toString)
-  }
-}*/
+
+class RDFTurtleParseException(message : String) extends RDFParseException(message)
