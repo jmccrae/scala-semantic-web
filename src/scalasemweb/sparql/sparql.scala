@@ -1,7 +1,7 @@
-package scala.rdf.sparql
+package scalasemweb.sparql
 
 import scala.util.parsing.combinator._
-import scala.rdf.{Value=>RDFValue,
+import scalasemweb.rdf.model.{Value=>RDFValue,
 _}
 import java.net.URI
 
@@ -321,7 +321,7 @@ case class Triple(val head : Resource, val body : List[PredicateObject]) extends
       case x : BNodeList => x.toStats
       case x : Collection => x.toStats
       case x => Nil
-  }) ::: List(head ~> pred ~> obj)})})
+  }) ::: List(head %> pred %> obj)})})
 }
     
 
@@ -349,8 +349,8 @@ case class PredicateObject(val pred : NamedNode, val objs : List[RDFValue]) {
  * An RDF Collection. Note this object is only the first blank node in the collection
  * @param elems The elements in the collection
  */
-class Collection(val elems : List[RDFValue]) extends AnonymousNode {
-  import scala.rdf.RDF._
+class Collection(val elems : List[RDFValue], id : String) extends BlankNode(id) {
+  import scalasemweb.rdf.model.RDF._
   
   def filter(p : (RDFValue) => Boolean) : List[RDFValue] = elems.flatMap{ x => x match {
     case c : Collection => c.filter(p) ::: (if(p(c)) { List(c) } else { Nil })
@@ -364,20 +364,20 @@ class Collection(val elems : List[RDFValue]) extends AnonymousNode {
   def toStats : List[Statement] = {
     def _toStats(last : Resource, els : List[RDFValue]) : List[Statement] = els match {
       case x :: xs => {
-        val node = new AnonymousNode
+        val node = AnonymousNode()
         (x match {
           case y : BNodeList => y.toStats
           case y : Collection => y.toStats
         case _ => Nil}) ::: (         
-        (last ~> RDF.rest ~> node) ::
-        (node ~> RDF.first ~> x) :: _toStats(node,xs))
+        (last %> RDF.rest %> node) ::
+        (node %> RDF.first %> x) :: _toStats(node,xs))
       }
-      case Nil => List(last ~> RDF.rest ~> RDF.nil)
+      case Nil => List(last %> RDF.rest %> RDF.nil)
     }
     if(elems.isEmpty) {
       Nil
     } else {
-      (this ~> RDF.first ~> elems.head) ::
+      (this %> RDF.first %> elems.head) ::
       _toStats(this, elems.tail)
     }
   }
@@ -387,7 +387,7 @@ class Collection(val elems : List[RDFValue]) extends AnonymousNode {
  * A blank node defined with a set of predicates and objects
  * @param body The body of the blank node declaration
  */
-class BNodeList(val body : List[PredicateObject]) extends AnonymousNode {
+class BNodeList(val body : List[PredicateObject],id : String) extends BlankNode(id) {
   override def toString = "[ " + body.mkString(" ;\n") + " ]"
   def filter(p : (RDFValue) => Boolean) : List[RDFValue] = body.flatMap(_.filter(p))
   
@@ -398,7 +398,7 @@ class BNodeList(val body : List[PredicateObject]) extends AnonymousNode {
           case x : BNodeList => x.toStats
           case x : Collection => x.toStats
           case x => Nil
-        }) ::: List(this ~> pred ~> obj)
+        }) ::: List(this %> pred %> obj)
       }
     }
   }
@@ -625,6 +625,7 @@ object SPARQLParser  {
     import scala.collection.mutable.HashMap    
   
     var prefixMap = new HashMap[String,NameSpace]()
+    private var bNodeNo = 0
     
     def query = prologue ~ ( selectQuery | constructQuery | describeQuery | askQuery ) ^^
     { case x ~ y => SPARQLQuery(x,y) }
@@ -728,9 +729,15 @@ object SPARQLParser  {
     
     def triplesNode : Parser[Resource] = collection | blankNodePropertyList
     
-    def blankNodePropertyList : Parser[Resource] = "[" ~> propertyListNotEmpty <~ "]" ^^ { new BNodeList(_) }
+    def blankNodePropertyList : Parser[Resource] = "[" ~> propertyListNotEmpty <~ "]" ^^ {
+      bNodeNo += 1
+      new BNodeList(_,bNodeNo.toString()) 
+    }
     
-    def collection : Parser[Resource] = "(" ~> (graphTerm+) <~ ")" ^^ { new Collection(_) }
+    def collection : Parser[Resource] = "(" ~> (graphTerm+) <~ ")" ^^ { 
+      bNodeNo += 1 
+      new Collection(_,bNodeNo.toString()) 
+    }
     
     def graphNode : Parser[Resource] = Var | triplesNode | blankNode | uriRef
     
@@ -834,7 +841,7 @@ object SPARQLParser  {
     def blankNodeID = regex("""_:[A-Za-z0-9_]+"""r) ^^ 
       { case x => BlankNode(x.substring(2)) }
     
-    def anon = literal("[ ]") ^^ { x => new AnonymousNode() }
+    def anon = literal("[ ]") ^^ { x => AnonymousNode() }
     
     def langTag = regex("""@[a-z][a-z0-9]*"""r) ^^ 
       { case x => x.substring(1) }

@@ -1,23 +1,57 @@
-package scala.rdf.xml
+package scalasemweb.rdf.io
 
-import scala.rdf._
+import scalasemweb.rdf.model._
+import scalasemweb.rdf.model.aux._
 import scala.collection.mutable.{HashMap,HashSet,ListBuffer,LinkedList}
 import scala.xml._
+import org.xml.sax.SAXParseException
+import java.io.{Writer,StringWriter}
 import java.net.URI
 
-object RDFXML {
-  import RDF._
+object RDFXML extends RDFWriter with RDFParser {
+  import scalasemweb.rdf.model.RDF._
   
   private val rdfuri = """http://www.w3.org/1999/02/22-rdf-syntax-ns#"""
   private val xsduri = """http://www.w3.org/2001/XMLScheme-datatypes"""
   
-  def convert(xmlDoc : Node) : List[Statement] = {
+  
+  def write(statList : StatementSet[Statement]) : String = {
+    convert(statList).toString() 
+  }
+  def write(statList : StatementSet[Statement], out : Appendable) {
+    out match {
+      case w : Writer => XML.write(w,convert(statList),"UTF-8",true,null)
+      case _ => {
+        val w = new StringWriter()
+        XML.write(w,convert(statList),"UTF-8",true,null)
+        out.append(w.toString())
+      }
+    }
+  }
+  @throws(classOf[RDFXMLFormatException])
+  def parse(doc:String) : StatementSet[Statement] = {
+    try {
+      convert(XML.loadString(doc))
+    } catch {
+      case x : SAXParseException => throw new RDFXMLFormatException("Not valid XML", x)
+    }
+  }
+  @throws(classOf[RDFXMLFormatException])
+  def parse(in: java.io.Reader) : StatementSet[Statement] = {
+    try {
+      convert(XML.load(in))
+    } catch {
+      case x : SAXParseException => throw new RDFXMLFormatException("Not valid XML", x)
+    }
+  }
+  
+  def convert(xmlDoc : Node) : StatementSet[Statement] = {
     if(xmlDoc.prefix == "rdf" &&
        xmlDoc.label == "RDF") {
          val parser = new RDFXMLParser
          parser.buildNameSpaces(xmlDoc.scope)
-         (xmlDoc.child flatMap (parser.nodeElement(_) match {
-         case Some(x) => x.stats; case None => Nil})).toList
+         new StdStatementSet((xmlDoc.child flatMap (parser.nodeElement(_) match {
+         case Some(x) => x.stats; case None => Nil})).toSet)
     } else {
       throw new RDFXMLFormatException("Document does not start in rdf:RDF")
     }
@@ -118,7 +152,7 @@ object RDFXML {
         }
         
         (node \ ("@{"+rdfuri+"}resource")) match {
-          case Seq(res,_*) => List(subj ~> pred ~> resolve(res.text))
+          case Seq(res,_*) => List(subj %> pred %> resolve(res.text))
           case Seq() => {         
             if(node.child.size == 1 && node.child(0).label == "#PCDATA") {
               val childNode = node.child(0)
@@ -140,11 +174,11 @@ object RDFXML {
               if(lang != None && datatype != None) {
                 throw new RDFXMLFormatException("String value cannot both have language tag and data type")
               } else if(lang != None) {
-                List(subj ~> pred ~> LangLiteral(childNode.text,lang.get))
+                List(subj %> pred %> LangLiteral(childNode.text,lang.get))
               } else if(datatype != None) {
-                List(subj ~> pred ~> TypedLiteral(childNode.text,datatype.get))
+                List(subj %> pred %> TypedLiteral(childNode.text,datatype.get))
               } else {
-                List(subj ~> pred ~> SimpleLiteral(childNode.text))
+                List(subj %> pred %> SimpleLiteral(childNode.text))
               }
             } else {
               var parseType : ParseType = defaultParse
@@ -170,7 +204,7 @@ object RDFXML {
                   nodeElement(childNode) match {
                     case Some(x) => { 
                       val ResStats(node, stats) = x
-                      newStats ++= (subj ~> pred ~> node) :: stats
+                      newStats ++= (subj %> pred %> node) :: stats
                     }
                     case None => 
                   }
@@ -178,15 +212,15 @@ object RDFXML {
                   
                 newStats.toList
               } else if(parseType == literalParse) { 
-                List(subj ~> pred ~> SimpleLiteral(node.child.mkString(""))) 
+                List(subj %> pred %> SimpleLiteral(node.child.mkString(""))) 
               } else if(parseType == resourceParse) {
                 val bn = genid()
                   
-                (subj ~> pred ~> bn) :: (node.child flatMap ( propertyElt(_,bn) )).toList
+                (subj %> pred %> bn) :: (node.child flatMap ( propertyElt(_,bn) )).toList
               } else if(parseType == collectionParse) {
                 val bn = genid()
                   
-                (subj ~> pred ~> bn) :: collParse(bn,node.child)
+                (subj %> pred %> bn) :: collParse(bn,node.child)
               } else {
                 throw new RuntimeException("Unreachable")
               }
@@ -210,8 +244,8 @@ object RDFXML {
               val ResStats(obj,stats) = x 
               val next = genid()
               
-              (subj ~> RDF.first ~> obj) :: 
-              (subj ~> RDF.rest ~> next) :: 
+              (subj %> RDF.first %> obj) :: 
+              (subj %> RDF.rest %> next) :: 
               collParse(next,children.tail) :::
               stats
             }
@@ -268,7 +302,7 @@ object RDFXML {
      * Format a list of statements in Turtle
      * @param statList The list of statements
      */
-    def convert(statList : List[Statement]) : Node = {
+    def convert(statList : StatementSet[Statement]) : Node = {
       var (theMap,nameSpaces,dupes) = RDFXMLConverter.buildMap(statList) 
       
       nameSpaces += RDF
@@ -286,7 +320,7 @@ object RDFXML {
       Elem("rdf","RDF",Null,scope,nodes:_*)
     }
     
-    private[RDFXML] def getHeader(node : Node) : String = {
+    private def getHeader(node : Node) : String = {
       val rv = new StringBuffer()
       rv.append("<?xml version=\"1.0\"?>\n\n<!DOCTYPE rdf:RDF [\n")
       var scope = node.scope
@@ -298,7 +332,7 @@ object RDFXML {
       rv.toString
     }
       
-    object RDFXMLConverter { 
+  private object RDFXMLConverter { 
     
     def node(n : Resource, theMap : HashMap[Resource, HashMap[NamedNode, LinkedList[Value]]],
     scope : NamespaceBinding, dupes : HashSet[BlankNode]) : Node = {
@@ -323,7 +357,7 @@ object RDFXML {
       }
     }
     
-    def buildMap(statList : List[Statement]) = {
+    def buildMap(statList : StatementSet[Statement]) = {
       val theMap = new HashMap[Resource, HashMap[NamedNode, LinkedList[Value]]]();
       val nameSpaces = new HashSet[NameSpace]()
       val mentioned = new HashSet[BlankNode]()
@@ -521,84 +555,7 @@ object RDFXML {
         case QName(ns,suf) => Unparsed("&"+ns.id +";"+suf)
         case URIRef(uri) => Unparsed(uri.toString)
       }
-    }
-    
-    /*
-    def convertPO(theMap : HashMap[Resource, HashMap[NamedNode, LinkedList[Value]]], 
-    head : HashMap[NamedNode, LinkedList[Value]], 
-    dupes : HashSet[BlankNode]) {
-      val iter = head.iterator
-      while(iter.hasNext) {
-        val (pred,objs) = iter.next
-        if(firstPO) {
-          out.append(pred.toString + " ")
-          firstPO = false
-        } else {
-          out.append("\n" + " ".rep(tabWidth * tabDepth) + pred.toString + " ")
-        }
-        var i = 0
-        val iter2 = objs.iterator
-        while(iter2.hasNext) {
-          val obj = iter2.next
-          if(i != 0 && i % maxObjs == 0) {
-            out.append("\n" + " ".rep(tabWidth * (tabDepth + 1)))
-          }
-          if(formatObj(obj,theMap,dupes,out,tabDepth)) {
-            i = maxObjs
-          } else {
-            i += 1
-          }
-          
-          if(iter2.hasNext) {
-            out.append(" ,")
-          }
-          if(iter.hasNext) {
-            out.append(" ;")
-          }
-        }
-      }
-      
-      head.key map { pred =>
-        Elem(getPredPrefix(pred,head),getPredLabel(pred,head),getPred
-    }
-    
-    def formatObj(obj : Value, theMap : HashMap[Resource, HashMap[NamedNode, LinkedList[Value]]],  
-    dupes : HashSet[BlankNode],
-    out : Appendable, 
-    tabDepth : Int) : Boolean =
-      obj match {
-        case x : NamedNode => { out.append(x.toString); false }
-        case x : BlankNode => { 
-          if(!theMap.contains(x) || theMap(x).size == 0 || dupes.contains(x)) {
-            out.append(x.toString);
-            false
-          } else if(theMap(x).size == 2 &&
-          theMap(x).contains(RDF.first) &&
-          theMap(x).contains(RDF.rest)) {
-            out.append("( ")
-            var node : Resource = x
-            do {
-              formatObj(theMap(node)(RDF.first)(0),theMap,dupes,out,tabDepth+1)
-              out.append("\n"+ " ".rep(tabWidth * (tabDepth + 1)))
-              val old = node
-              node = theMap(node)(RDF.rest)(0).asInstanceOf[Resource]
-              theMap.remove(old)
-            } while(node != RDF.nil)
-            out.append(")")
-            true
-          } else {
-            out.append("[ ")
-            val newHead = theMap(x)
-            theMap.remove(x)
-            formatPO(theMap, newHead, dupes, out,tabDepth+1)
-            out.append(" ]")
-            true
-          }
-        }
-        case x : Literal => { out.append(x.toString); false }
-      }
-  }*/
-    
+    }    
 }
 
-class RDFXMLFormatException(message : String) extends RuntimeException(message)
+class RDFXMLFormatException(message : String, cause : Throwable = null) extends RDFParseException(message,cause)
