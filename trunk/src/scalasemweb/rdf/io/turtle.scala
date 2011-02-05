@@ -7,13 +7,13 @@ import scala.collection.mutable.{HashMap,LinkedList,HashSet}
 object Turtle extends RDFWriter with RDFParser {
   private val printer = new TurtlePrinter()
   
-  def write(statSet : StatementSet[Statement]) : String = printer.format(statSet)
+  def write(statSet : StatementSet) : String = printer.format(statSet)
   
-  def write(statSet : StatementSet[Statement], out : Appendable) { printer.format(statSet,out) }
+  def write(statSet : StatementSet, out : Appendable) { printer.format(statSet,out) }
   
-  def parse(doc:String) : StatementSet[Statement] = TurtleParser.parse(doc)
+  def parse(doc:String) : StatementSet = TurtleParser.parse(doc)
   
-  def parse(in: java.io.Reader) : StatementSet[Statement] = TurtleParser.parse(in)
+  def parse(in: java.io.Reader) : StatementSet = TurtleParser.parse(in)
 }
 
 /**
@@ -37,7 +37,7 @@ class TurtlePrinter(tabWidth : Int = 2, postStatSpacing : Int = 2, maxObjs : Int
    * Format a list of statements in Turtle
    * @param statList The list of statements
    */
-  def format(statList : StatementSet[Statement]) : String = {
+  def format(statList : StatementSet) : String = {
     val writer = new StringWriter();
     format(statList,writer)
     writer.toString
@@ -46,7 +46,7 @@ class TurtlePrinter(tabWidth : Int = 2, postStatSpacing : Int = 2, maxObjs : Int
   /** Format a list of statements in Turtle
    * @param out The appendable buffer to add the result to
    */
-  def format(statList : StatementSet[Statement], out : Appendable) : Unit = {
+  def format(statList : StatementSet, out : Appendable) : Unit = {
     val (theMap,nameSpaces,dupes) = buildMap(statList) 
     
     nameSpaces += RDF
@@ -101,7 +101,7 @@ class TurtlePrinter(tabWidth : Int = 2, postStatSpacing : Int = 2, maxObjs : Int
     }
   }
   
-  private def buildMap(statList : StatementSet[Statement]) = {
+  private def buildMap(statList : StatementSet) = {
     val theMap = new HashMap[Resource, HashMap[NamedNode, HashSet[Value]]]();
     val nameSpaces = new HashSet[NameSpace]()
     val mentioned = new HashSet[BlankNode]()
