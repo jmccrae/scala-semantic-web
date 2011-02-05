@@ -1,7 +1,6 @@
 package scalasemweb.rdf.io
 
 import scalasemweb.rdf.model._
-import scalasemweb.rdf.model.aux._
 import scala.collection.mutable.{HashMap,HashSet,ListBuffer,LinkedList}
 import scala.xml._
 import org.xml.sax.SAXParseException
@@ -15,10 +14,10 @@ object RDFXML extends RDFWriter with RDFParser {
   private val xsduri = """http://www.w3.org/2001/XMLScheme-datatypes"""
   
   
-  def write(statList : StatementSet) : String = {
+  def write(statList : TripleSet) : String = {
     convert(statList).toString() 
   }
-  def write(statList : StatementSet, out : Appendable) {
+  def write(statList : TripleSet, out : Appendable) {
     out match {
       case w : Writer => XML.write(w,convert(statList),"UTF-8",true,null)
       case _ => {
@@ -29,7 +28,7 @@ object RDFXML extends RDFWriter with RDFParser {
     }
   }
   @throws(classOf[RDFXMLFormatException])
-  def parse(doc:String) : StatementSet = {
+  def parse(doc:String) : TripleSet = {
     try {
       convert(XML.loadString(doc))
     } catch {
@@ -37,7 +36,7 @@ object RDFXML extends RDFWriter with RDFParser {
     }
   }
   @throws(classOf[RDFXMLFormatException])
-  def parse(in: java.io.Reader) : StatementSet = {
+  def parse(in: java.io.Reader) : TripleSet = {
     try {
       convert(XML.load(in))
     } catch {
@@ -45,19 +44,19 @@ object RDFXML extends RDFWriter with RDFParser {
     }
   }
   
-  def convert(xmlDoc : Node) : StatementSet = {
+  def convert(xmlDoc : Node) : TripleSet = {
     if(xmlDoc.prefix == "rdf" &&
        xmlDoc.label == "RDF") {
          val parser = new RDFXMLParser
          parser.buildNameSpaces(xmlDoc.scope)
-         new StdStatementSet((xmlDoc.child flatMap (parser.nodeElement(_) match {
+         TripleSet fromSet ((xmlDoc.child flatMap (parser.nodeElement(_) match {
          case Some(x) => x.stats; case None => Nil})).toSet)
     } else {
       throw new RDFXMLFormatException("Document does not start in rdf:RDF")
     }
   }
   
-  private case class ResStats(value:Value,stats:List[Statement])
+  private case class ResStats(value:Value,stats:List[Triple])
   
   
   private[RDFXML] sealed abstract class ParseType
@@ -104,7 +103,7 @@ object RDFXML extends RDFWriter with RDFParser {
         None
       } else {
         var subject : Option[Resource] = None
-        var predObjs = new HashSet[PredObj]()
+        var predObjs = new HashSet[RDFPair[NamedNode,Value]]()
         
         for(attr <- node.attributes) {
           attr match {
@@ -118,10 +117,10 @@ object RDFXML extends RDFWriter with RDFParser {
               subject = Some(resolve(value.text))
             }
             case PrefixedAttribute(pre,label,value,_) => {
-              predObjs += PredObj(nameSpace(pre)&label, SimpleLiteral(value.text))
+              predObjs += (nameSpace(pre)&label) %> SimpleLiteral(value.text)
             }
             case UnprefixedAttribute(key,value,_) => {
-              predObjs += PredObj(nameSpace("")&key, SimpleLiteral(value.text))
+              predObjs += (nameSpace("")&key) %> SimpleLiteral(value.text)
             }
           }
         }
@@ -132,7 +131,7 @@ object RDFXML extends RDFWriter with RDFParser {
         }
         
         val typeDef = if(!(node.prefix == "rdf" && node.label == "Description")) {
-           List(Statement(subject.get, RDF._type, resolve(node.prefix, node.label)))
+           List(Triple(subject.get, RDF._type, resolve(node.prefix, node.label)))
         } else {
            Nil
         }
@@ -142,7 +141,7 @@ object RDFXML extends RDFWriter with RDFParser {
       }
     }
     
-    def propertyElt(node : Node, subj : Resource) : List[Statement] = {
+    def propertyElt(node : Node, subj : Resource) : List[Triple] = {
       if(node.label == "#PCDATA") {
         Nil
       } else {
@@ -198,7 +197,7 @@ object RDFXML extends RDFWriter with RDFParser {
               }
               
               if(parseType == defaultParse) {
-                var newStats = new ListBuffer[Statement]()
+                var newStats = new ListBuffer[Triple]()
                   
                 for(childNode <- node.child) {
                   nodeElement(childNode) match {
@@ -230,7 +229,7 @@ object RDFXML extends RDFWriter with RDFParser {
       }
     }
     
-    def collParse(subj : BlankNode, children : Seq[Node]) : List[Statement] = {
+    def collParse(subj : BlankNode, children : Seq[Node]) : List[Triple] = {
       if(children.isEmpty) {
         Nil
       } else {
@@ -302,7 +301,7 @@ object RDFXML extends RDFWriter with RDFParser {
      * Format a list of statements in Turtle
      * @param statList The list of statements
      */
-    def convert(statList : StatementSet) : Node = {
+    def convert(statList : TripleSet) : Node = {
       var (theMap,nameSpaces,dupes) = RDFXMLConverter.buildMap(statList) 
       
       nameSpaces += RDF
@@ -357,7 +356,7 @@ object RDFXML extends RDFWriter with RDFParser {
       }
     }
     
-    def buildMap(statList : StatementSet) = {
+    def buildMap(statList : TripleSet) = {
       val theMap = new HashMap[Resource, HashMap[NamedNode, LinkedList[Value]]]();
       val nameSpaces = new HashSet[NameSpace]()
       val mentioned = new HashSet[BlankNode]()

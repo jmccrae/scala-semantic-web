@@ -17,9 +17,10 @@ trait Value
 trait Resource extends Value {
   /** Construct a RDF pair */
   def %>(pred:NamedNode) = new %>(this,pred)
-  def %>*(predObjs:PredObj*) : StatementSet = {
-  	new StdStatementSet((predObjs map { 
-			predObj => Statement(this, predObj._1,predObj._2)
+  /** Contruct a set of triples from a list of pairs */
+  def %>*(predObjs:RDFPair[NamedNode,Value]*) : TripleSet = {
+  	new StdTripleSet((predObjs map { 
+			predObj => Triple(this, predObj._1,predObj._2)
     }).toSet)
   }
 }
@@ -39,9 +40,15 @@ trait NamedNode extends Resource {
   /** The unqualified URI of the resource */
   def uri:URI
   /** Construct a RDF pair */
-  def %>(lit:Literal) = PredObj(this,lit)
+  def %>(lit:Literal) : RDFPair[NamedNode,Value] = PredObj(this,lit)
   /** Construct a RDF pair */
-  def %>(bn:BlankNode) = PredObj(this,bn)
+  def %>(bn:BlankNode) :RDFPair[NamedNode,Value] = PredObj(this,bn)
+  /** Construct a RDF pair */
+  override def %>(nn:NamedNode) : %>[NamedNode,NamedNode] = new %>(this,nn)
+  /** Construct a sequence of RDF Pairs */
+  def %>*(vals : Value*) : Seq[RDFPair[NamedNode,Value]] = vals map {
+    value => PredObj(this,value)
+  }
 }
 
 /**
@@ -114,43 +121,57 @@ case class TypedLiteral(val value:String, val typ:NamedNode) extends Literal {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
-// Statements
+// Triples
+
+/**
+ * A pair of RDF values. That is a partly constructed triple 
+ */
+trait RDFPair[+T <: Resource, +U <: Value] {
+	def _1 : T
+	def _2 : U
+}
+
+private case class PredObj(val predicate : NamedNode, val obj : Value) extends RDFPair[NamedNode,Value] {
+	def _1 = predicate
+	def _2 = obj
+}
+
 
 /**
  * Used to create objects and provide case matching
  */
-class %>(val subject : Resource, val predicate : NamedNode) extends RDFPair[Resource,NamedNode] {
-	def %>(obj : Value) = new Statement(this,obj)
-  def %>*(vals:Value*) : StatementSet = new StdStatementSet((vals map { 
-  	(value:Value) => new Statement(this,value) 
+class %>[+Subj <:Resource,+Obj <: NamedNode](val subject : Subj, val predicate : Obj) extends RDFPair[Subj,Obj] {
+	def %>(obj : Value) = new Triple(this,obj)
+  def %>*(vals:Value*) : TripleSet = new StdTripleSet((vals map { 
+  	(value:Value) => new Triple(this,value) 
   }).toSet)
-  def _1 = subject
-  def _2 = predicate
+  def _1 : Subj = subject
+  def _2 : Obj = predicate
   override def hashCode = {
   	subject.hashCode * 31 + predicate.hashCode
   }
 }
 
 object %> {
-	def apply(subject : Resource, predicate : NamedNode) = new %>(subject,predicate)
-	def unapply(stat : Statement) : Option[Tuple2[%>,Value]] = Some((stat.subjPred,stat.obj))
-	def unapply(subjPred : %>) : Option[Tuple2[Resource,NamedNode]] = Some((subjPred.subject, subjPred.predicate))
+	def apply[Subj <: Resource, Obj <: NamedNode](subject : Subj, predicate : Obj) = new %>(subject,predicate)
+	def unapply(stat : Triple) : Option[Tuple2[%>[Resource,NamedNode],Value]] = Some((stat.subjPred,stat.obj))
+	def unapply(subjPred : %>[Resource,NamedNode]) : Option[Tuple2[Resource,NamedNode]] = Some((subjPred.subject, subjPred.predicate))
 }
 
 
 /**
- * An RDF statement (triple).
+ * An RDF triple.
  * @param subj The subject of the triple
  * @param prop The predicate (property) of the triple
  * @param obj The object of the triple
  */
-class Statement(val subjPred : %>, val obj : Value) {
+class Triple(val subjPred : %>[Resource,NamedNode], val obj : Value) {
 	override def toString = subj + " " + pred + " " + obj
   def subj = subjPred.subject
   def pred = subjPred.predicate  
   override def equals(o : Any) = {
   	o match {
-  		case Statement(s,p,o) => subjPred.subject == s && subjPred.predicate == p && obj == o
+  		case Triple(s,p,o) => subjPred.subject == s && subjPred.predicate == p && obj == o
   		case _ => false
   	}
   }
@@ -159,9 +180,9 @@ class Statement(val subjPred : %>, val obj : Value) {
   }
 }
 
-object Statement {
-	def apply(subject : Resource, predicate : NamedNode, obj : Value) = new Statement(new %>(subject,predicate),obj)
-	def unapply(statement : Statement) : Option[Tuple3[Resource,NamedNode,Value]] = { 
+object Triple {
+	def apply(subject : Resource, predicate : NamedNode, obj : Value) = new Triple(new %>(subject,predicate),obj)
+	def unapply(statement : Triple) : Option[Tuple3[Resource,NamedNode,Value]] = { 
 		Some(statement.subj,statement.pred,statement.obj)
 	}
 }
@@ -181,33 +202,66 @@ case class NameSpace(val id:String, val prefix:String) {
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////
-// StatementSet
+// TripleSet
 
 import scala.collection._
 import scala.collection.mutable.Builder
+import scala.collection.generic._
 
-trait StatementSet extends Set[Statement] with SetLike[Statement,StatementSet] {
+/**
+ * A set of triples
+ */
+trait TripleSet extends Set[Triple] with SetLike[Triple,TripleSet] {
+  /** Does this set contain any triples of the given form
+   * @param subject The subject or None for wildcard
+   * @param predicate The subject or None for wildcard
+   * @param obj The subject or None for wildcard
+   */
 	def has(subject : Option[Resource], predicate : Option[NamedNode], obj : Option[Value]) : Boolean
-	def get(subject : Option[Resource], predicate : Option[NamedNode], obj : Option[Value]) : StatementSet
-	override def empty : StatementSet = new StdStatementSet(Set())
+	/** Does this set contain any triples of the given form
+   * @param subject The subject or None for wildcard
+   * @param predicate The subject or None for wildcard
+   * @param obj The subject or None for wildcard
+   */
+	def get(subject : Option[Resource], predicate : Option[NamedNode], obj : Option[Value]) : TripleSet
+	/** Get an immutable empty statement set */
+	override def empty : TripleSet = new StdTripleSet(Set())
+	/** Incorporate a view into this statement set */
+	def ++(view : View) : TripleSet = this ++ (view.frame)
+	/** Remove a view from this statement set */
+	def --(view : View) : TripleSet = this -- (view.frame)
 }
 
-object StatementSet {
-	def apply(statements : Statement*) = new StdStatementSet(statements.toSet)
+object TripleSet {
+	def apply(statements : Triple*) :TripleSet = new StdTripleSet(statements.toSet)
 	
-	private def fromSet(statements : Set[Statement]) = new StdStatementSet(statements)
+	def unapplySeq(statementSet : TripleSet) : Option[Seq[Triple]] = Some(statementSet.toSeq)
 	
-	def newBuilder : Builder[Statement, StatementSet] = {
-	  new scala.collection.mutable.HashSet[Statement] mapResult {
+	/** Get a statement set from a set of statements */
+	implicit def fromSet(statements : Set[Triple]) : TripleSet = new StdTripleSet(statements)
+	
+	private lazy val _empty = new StdTripleSet(Set())
+	
+	def empty : TripleSet = _empty
+	
+	def newBuilder : Builder[Triple, TripleSet] = {
+	  new scala.collection.mutable.HashSet[Triple] mapResult {
 	    x => fromSet(x) 
 	  }
 	}
+	
+	implicit def canBuildFrom : CanBuildFrom[TripleSet,Triple,TripleSet] = 
+	new CanBuildFrom[TripleSet,Triple,TripleSet] {
+	  def apply = newBuilder
+	  def apply(stats : TripleSet) = newBuilder
+	}
+	  
 }
 
-class StdStatementSet(statements : Set[Statement]) extends StatementSet {
-	def -(statement : Statement) = new StdStatementSet(statements - statement)
-	def +(statement : Statement) = new StdStatementSet(statements + statement) 
-	def contains(statement : Statement) = statements.contains(statement)
+private class StdTripleSet(statements : Set[Triple]) extends TripleSet {
+	def -(statement : Triple) = new StdTripleSet(statements - statement)
+	def +(statement : Triple) = new StdTripleSet(statements + statement) 
+	def contains(statement : Triple) = statements.contains(statement)
 	def iterator = statements.iterator
 	def has(subject : Option[Resource], predicate : Option[NamedNode], obj : Option[Value]) : Boolean = {
 		subject match {
@@ -216,20 +270,20 @@ class StdStatementSet(statements : Set[Statement]) extends StatementSet {
 					case Some(pred) => {
 						obj match {
 							case Some(ob) => {
-								statements exists { case Statement(s,p,o) => s == subj && p == pred && o == obj }
+								statements exists { case Triple(s,p,o) => s == subj && p == pred && o == obj }
 							}
 							case None => {
-								statements exists { case Statement(s,p,o) => s == subj && p == pred }
+								statements exists { case Triple(s,p,o) => s == subj && p == pred }
 							}
 						}
 					}
 					case None => {
 						obj match {
 							case Some(ob) => {
-								statements exists { case Statement(s,p,o) => s == subj && o == ob }
+								statements exists { case Triple(s,p,o) => s == subj && o == ob }
 							}
 							case None => {
-								statements exists { case Statement(s,p,o) => s == subj }
+								statements exists { case Triple(s,p,o) => s == subj }
 							}
 						}
 					}
@@ -240,17 +294,17 @@ class StdStatementSet(statements : Set[Statement]) extends StatementSet {
 					case Some(pred) => {
 						obj match {
 							case Some(ob) => {
-								statements exists { case Statement(s,p,o) => p == pred && o == ob }
+								statements exists { case Triple(s,p,o) => p == pred && o == ob }
 							}
 							case None => {
-								statements exists { case Statement(s,p,o) => p == pred }
+								statements exists { case Triple(s,p,o) => p == pred }
 							}
 						}
 					}
 					case None => {
 						obj match {
 							case Some(ob) => {
-								statements exists { case Statement(s,p,o) => o == ob }
+								statements exists { case Triple(s,p,o) => o == ob }
 							}
 							case None => {
 								!statements.isEmpty
@@ -261,27 +315,27 @@ class StdStatementSet(statements : Set[Statement]) extends StatementSet {
 			}
 		}
 	}
-	def get(subject : Option[Resource], predicate : Option[NamedNode], obj : Option[Value]) : StdStatementSet = {
-		new StdStatementSet (subject match {
+	def get(subject : Option[Resource], predicate : Option[NamedNode], obj : Option[Value]) : StdTripleSet = {
+		new StdTripleSet (subject match {
 			case Some(subj) => {
 				predicate match {
 					case Some(pred) => {
 						obj match {
 							case Some(ob) => {
-								statements filter ( _ == Statement(subj,pred,ob) )
+								statements filter ( _ == Triple(subj,pred,ob) )
 							}
 							case None => {
-								statements filter { case Statement(s,p,o) => s == subj && p == pred }
+								statements filter { case Triple(s,p,o) => s == subj && p == pred }
 							}
 						}
 					}
 					case None => {
 						obj match {
 							case Some(ob) => {
-								statements filter { case Statement(s,p,o) => s == subj && o == ob }
+								statements filter { case Triple(s,p,o) => s == subj && o == ob }
 							}
 							case None => {
-								statements filter { case Statement(s,p,o) => s == subj }
+								statements filter { case Triple(s,p,o) => s == subj }
 							}
 						}
 					}
@@ -292,17 +346,17 @@ class StdStatementSet(statements : Set[Statement]) extends StatementSet {
 					case Some(pred) => {
 						obj match {
 							case Some(ob) => {
-								statements filter { case Statement(s,p,o) => p == pred && o == ob }
+								statements filter { case Triple(s,p,o) => p == pred && o == ob }
 							}
 							case None => {
-								statements filter { case Statement(s,p,o) => p == pred }
+								statements filter { case Triple(s,p,o) => p == pred }
 							}
 						}
 					}
 					case None => {
 						obj match {
 							case Some(ob) => {
-								statements filter { case Statement(s,p,o) => o == ob }
+								statements filter { case Triple(s,p,o) => o == ob }
 							}
 							case None => {
 								statements
@@ -313,6 +367,20 @@ class StdStatementSet(statements : Set[Statement]) extends StatementSet {
 			}
 		})
 	}
+}
+
+/**
+ * A view is a semantic focus on a set of triples. Each view is defined by its frame, that 
+ * is the set of triples it cares about. A view is considered exact if its frame is exactly
+ * the triples it is viewing
+ */
+trait View {
+  /** The underlying triple set being viewed */
+  def statements : TripleSet
+  /** The set of triples of interest to this view */
+  def frame : TripleSet
+  /** Returns true is the underlying triple set is also the frame */ 
+  def isExact : Boolean = statements == frame
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -366,9 +434,8 @@ object XSD extends NameSpace("xsd","http://www.w3.org/2001/XMLSchema") {
 	val positiveInteger = this&"positiveInteger"
 }
 
-/** The Resource Description Framework name space. All the RDF URIs are defined here, also implicit conversions for common types are included here */
-
-
+/** The Resource Description Framework name space. All the RDF URIs are defined here, 
+ * also implicit conversions for common types are included here */
 object RDF extends NameSpace("rdf", """http://www.w3.org/1999/02/22-rdf-syntax-ns#""") {
   private var _base = NameSpace("","")
   
@@ -379,7 +446,7 @@ object RDF extends NameSpace("rdf", """http://www.w3.org/1999/02/22-rdf-syntax-n
 
   val _type = this&"type"
   val Property = this&"Property"
-  val _Statement = this&"Statement"
+  val _Triple = this&"Triple"
   val subject = this&"subject"
   val predicate = this&"predicate"
   val _object = this&"object" 

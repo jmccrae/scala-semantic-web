@@ -11,13 +11,13 @@ trait RDFWriter {
    * @param statSet The set of statements
    * @return The string in the format of the writer
    */
-   def write(statSet : StatementSet) : String 
+   def write(statSet : TripleSet) : String 
    /**
     * Write a set of statements to a target
     * @param stat The set of statements
     * @param out The target for output
     */
-   def write(statSet : StatementSet, out : Appendable) : Unit
+   def write(statSet : TripleSet, out : Appendable) : Unit
 }
 
 /**
@@ -31,7 +31,7 @@ trait RDFParser {
    * @throws RDFParseException If the document could not be parsed
    */
    @throws(classOf[RDFParseException])
-  def parse(doc:String) : StatementSet
+  def parse(doc:String) : TripleSet
   /**
    * Read a set of statements from a input source
    * @param in The input source
@@ -39,7 +39,7 @@ trait RDFParser {
    * @throws RDFParseException If the input stream could not be parsed
    */
    @throws(classOf[RDFParseException])
-  def parse(in: java.io.Reader) : StatementSet
+  def parse(in: java.io.Reader) : TripleSet
 }
 
 class RDFParseException(msg : String = "", cause : Throwable = null) extends RuntimeException(msg,cause)

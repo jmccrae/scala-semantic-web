@@ -14,7 +14,9 @@ package object model {
     def uri = URIRef(URI.create(str))
   }
   /** Convert a symbol to a QName in the RDF base namespace */
-  implicit def sym2qn(sym:Symbol) = RDF.base&(sym.name)
+  implicit def sym2qn(sym:Symbol) : NamedNode = RDF.base&(sym.name)
+  
+ // implicit def sym2res(sym:Symbol) : Resource = sym2qn(sym)
   
   /** Convert a URI to a URIref */
   implicit def uri2ref(uri : URI) = URIRef(uri)
