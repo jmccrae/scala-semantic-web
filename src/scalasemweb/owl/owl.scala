@@ -1,4 +1,4 @@
-package scalasemweb.owl
+/*package scalasemweb.owl
 
 import scalasemweb.rdf.model._
 import scalasemweb.rdf.model.collections._
@@ -83,41 +83,41 @@ object OWL extends NameSpace("owl","""http://www.w3.org/2002/07/owl#""") {
  val versionInfo                  = this&"versionInfo"
 }
 
-trait OWLEntity extends StatementSet{
+trait OWLEntity extends TripleSet{
   def resource : Resource
   def annotations(annos : Tuple2[NamedNode,Value]*) = {
-    new StdStatementSet(this ++ (annos map {
+    new StdTripleSet(this ++ (annos map {
       anno => resource %> anno._1 %> anno._2
     }))
   }
 }
 
 trait OWLClass extends OWLEntity {
-  def subClassOf(clazzes : OWLClass*) : StatementSet = {
-    new StdStatementSet(this ++ (clazzes flatMap { 
+  def subClassOf(clazzes : OWLClass*) : TripleSet = {
+    new StdTripleSet(this ++ (clazzes flatMap { 
       clazz => clazz + (resource %> RDFS.subClassOf %> clazz.resource) 
     }))
   }
-  def equivalentClass(clazzes : OWLClass*) : StatementSet = {
-    new StdStatementSet(this ++ (clazzes flatMap { 
+  def equivalentClass(clazzes : OWLClass*) : TripleSet = {
+    new StdTripleSet(this ++ (clazzes flatMap { 
       clazz => clazz + (resource %> OWL.equivalentClass %> clazz.resource)
     }))
   }
-  def disjointWith(clazzes : OWLClass*) : StatementSet = {
-    new StdStatementSet(this ++ (clazzes flatMap { 
+  def disjointWith(clazzes : OWLClass*) : TripleSet = {
+    new StdTripleSet(this ++ (clazzes flatMap { 
       clazz => clazz + (resource %> OWL.disjointWith %> clazz.resource)
     }))
   }
-  def disjointUnionOf(clazzList : Iterable[OWLClass]) : StatementSet = {
+  def disjointUnionOf(clazzList : Iterable[OWLClass]) : TripleSet = {
     val list = RDFList(clazzList map (_.resource))
-    new StdStatementSet(this + (resource %> OWL.disjointUnionOf %> list.node) ++ list ++ (clazzList flatMap (x=>x)))
+    new StdTripleSet(this + (resource %> OWL.disjointUnionOf %> list.node) ++ list ++ (clazzList flatMap (x=>x)))
   }
 }
 
 trait OWLClassExpr extends OWLClass {
- /* def subClasses : Set[OWLClassExpr] = {
+  def subClasses : Set[OWLClassExpr] = {
     get(Some(resource), Some(RDFS.subClassOf), None) map {
-      case res : Resource => new StdStatementSet(this) with OWLClassExpr {
+      case res : Resource => new StdTripleSet(this) with OWLClassExpr {
         def resource = res
       }
       case x => throw new OWLException(x + " was stated as a sub class but is not a resource")
@@ -125,7 +125,7 @@ trait OWLClassExpr extends OWLClass {
   }
   def equivalentClasses : Set[OWLClassExpr] = {
     get(Some(resource), Some(OWL.equivalentClass), None) map {
-      case res :Resource => new StdStatementSet(this) with OWLClassExpr {
+      case res :Resource => new StdTripleSet(this) with OWLClassExpr {
         def resource = res
       }
       case x => throw new OWLException(x + " was stated as an equivalent class but is not a resource")
@@ -133,7 +133,7 @@ trait OWLClassExpr extends OWLClass {
   }
   def disjointClasses : Set[OWLClassExpr] = {
     get(Some(resource), Some(OWL.equivalentClass), None) map {
-      case res : Resource => new StdStatementSet(this) with OWLClassExpr {
+      case res : Resource => new StdTripleSet(this) with OWLClassExpr {
         def resource = res
       }
       case x => throw new OWLException(x + " was stated as a disjoint class but is not a resource")
@@ -143,7 +143,7 @@ trait OWLClassExpr extends OWLClass {
     get(Some(resource), Some(OWL.disjointUnionOf), None) flatMap {
       case res : Resource => RDFList.getList(res, this) match {
         case Some(l) => List(l.toValueList map {
-          case r : Resource => new StdStatementSet(this) with OWLClassExpr {
+          case r : Resource => new StdTripleSet(this) with OWLClassExpr {
             def resource = r
           }
           case v => throw new OWLException(v + " was stated as a disjoint union of a class but is not a resource")
@@ -152,14 +152,14 @@ trait OWLClassExpr extends OWLClass {
       }
       case x => throw new OWLException(x + " was stated as a disjoint union list but is not a resource")
     }
-  }*/
+  }
 }
 
 object OWLClass {
-  def apply(res : Resource) : OWLClassExpr = new StdStatementSet(Set(res %> RDF._type %> OWL._Class)) with OWLClassExpr {
+  def apply(res : Resource) : OWLClassExpr = new StdTripleSet(Set(res %> RDF._type %> OWL._Class)) with OWLClassExpr {
     def resource = res
   }
-  def unapply(ss : StatementSet) : Option[Resource] = {
+  def unapply(ss : TripleSet) : Option[Resource] = {
     if(ss.size == 1) {
       ss.head match {
         case res %> RDF._type %> OWL._Class => Some(res)
@@ -172,21 +172,21 @@ object OWLClass {
 }
 
 trait ObjectProperty extends OWLEntity {
-  def domain(clazzes : OWLClass*) : StatementSet = {
-    new StdStatementSet(this ++ (clazzes flatMap {
+  def domain(clazzes : OWLClass*) : TripleSet = {
+    new StdTripleSet(this ++ (clazzes flatMap {
       clazz => clazz + (resource %> RDFS.domain %> clazz.resource)
     }))
   }
-  def range(clazzes : OWLClass*) : StatementSet = {
-    new StdStatementSet(this ++ (clazzes flatMap {
+  def range(clazzes : OWLClass*) : TripleSet = {
+    new StdTripleSet(this ++ (clazzes flatMap {
       clazz => clazz + (resource %> RDFS.range %> clazz.resource)
     }))
   }
-  def subPropertyOf(objProps : ObjectProperty*) : StatementSet = {
-    new StdStatementSet(this ++ (objProps flatMap {
+  def subPropertyOf(objProps : ObjectProperty*) : TripleSet = {
+    new StdTripleSet(this ++ (objProps flatMap {
       objProp => objProp + (resource %> RDFS.subPropertyOf %> objProp.resource)
     }))
   }
 }
 
-class OWLException(message : String = "", cause : Throwable = null) extends RuntimeException(message,cause)
+class OWLException(message : String = "", cause : Throwable = null) extends RuntimeException(message,cause)*/

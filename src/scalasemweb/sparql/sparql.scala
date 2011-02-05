@@ -286,7 +286,7 @@ extends Constraint with PrimaryExpression {
  * The template used by a construct
  * @param body The body of the template. Must not be empty
  */
-case class ConstructTemplate(val body : List[Triple]) {
+case class ConstructTemplate(val body : List[Triple2]) {
   require(!body.isEmpty)
   def filter(p : (RDFValue) => Boolean) : List[RDFValue] = body.flatMap(_.filter(p))
   
@@ -298,7 +298,7 @@ case class ConstructTemplate(val body : List[Triple]) {
  * @param head The head of the triple
  * @param body The associated predicates and objects. May be empty only if the head is a BNodeList or Collection
  */
-case class Triple(val head : Resource, val body : List[PredicateObject]) extends GraphExpression {
+case class Triple2(val head : Resource, val body : List[PredicateObject]) extends GraphExpression {
   require(!body.isEmpty || head.isInstanceOf[BNodeList] || head.isInstanceOf[Collection])
   def filter(p : (RDFValue) => Boolean) : List[RDFValue] = (head match {
     case c : Collection => c.filter(p)
@@ -312,7 +312,7 @@ case class Triple(val head : Resource, val body : List[PredicateObject]) extends
   
   override def toString = head + " " + body.mkString(" ;\n")
   /** Convert to a list of statements */
-  def toStats : List[Statement] = (head match {
+  def toStats : List[Triple] = (head match {
     case x : BNodeList => x.toStats
     case x : Collection => x.toStats
     case x => Nil
@@ -361,8 +361,8 @@ class Collection(val elems : List[RDFValue], id : String) extends BlankNode(id) 
   
   override def toString = "( " + elems.mkString(" ") + " )"
   /** Convert to a list of statements */
-  def toStats : List[Statement] = {
-    def _toStats(last : Resource, els : List[RDFValue]) : List[Statement] = els match {
+  def toStats : List[Triple] = {
+    def _toStats(last : Resource, els : List[RDFValue]) : List[Triple] = els match {
       case x :: xs => {
         val node = AnonymousNode()
         (x match {
@@ -392,7 +392,7 @@ class BNodeList(val body : List[PredicateObject],id : String) extends BlankNode(
   def filter(p : (RDFValue) => Boolean) : List[RDFValue] = body.flatMap(_.filter(p))
   
   /** Convert to a list of statements */
-  def toStats : List[Statement] = {
+  def toStats : List[Triple] = {
     body flatMap { case PredicateObject(pred,objs) => objs flatMap {
       obj => (obj match {
           case x : BNodeList => x.toStats
@@ -711,9 +711,9 @@ object SPARQLParser  {
     def constructTemplate = "{" ~> rep1sep(triplesSameSubject,".") <~ "}" ^^ { ConstructTemplate(_) }
     
     def triplesSameSubject = graphNode ~ propertyListNotEmpty  ^^ 
-    { case x ~ y => Triple(x,y) } | 
+    { case x ~ y => Triple2(x,y) } | 
     triplesNode ~ propertyList ^^
-    { case x ~ y => Triple(x,y) }
+    { case x ~ y => Triple2(x,y) }
     
     def propertyListNotEmpty = rep1sep(verb ~ objectList, ";") ^^
     { case list => list map { case x ~ y => PredicateObject(x,y) } }

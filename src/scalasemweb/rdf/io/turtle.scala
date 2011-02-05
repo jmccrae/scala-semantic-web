@@ -7,13 +7,13 @@ import scala.collection.mutable.{HashMap,LinkedList,HashSet}
 object Turtle extends RDFWriter with RDFParser {
   private val printer = new TurtlePrinter()
   
-  def write(statSet : StatementSet) : String = printer.format(statSet)
+  def write(statSet : TripleSet) : String = printer.format(statSet)
   
-  def write(statSet : StatementSet, out : Appendable) { printer.format(statSet,out) }
+  def write(statSet : TripleSet, out : Appendable) { printer.format(statSet,out) }
   
-  def parse(doc:String) : StatementSet = TurtleParser.parse(doc)
+  def parse(doc:String) : TripleSet = TurtleParser.parse(doc)
   
-  def parse(in: java.io.Reader) : StatementSet = TurtleParser.parse(in)
+  def parse(in: java.io.Reader) : TripleSet = TurtleParser.parse(in)
 }
 
 /**
@@ -37,7 +37,7 @@ class TurtlePrinter(tabWidth : Int = 2, postStatSpacing : Int = 2, maxObjs : Int
    * Format a list of statements in Turtle
    * @param statList The list of statements
    */
-  def format(statList : StatementSet) : String = {
+  def format(statList : TripleSet) : String = {
     val writer = new StringWriter();
     format(statList,writer)
     writer.toString
@@ -46,7 +46,7 @@ class TurtlePrinter(tabWidth : Int = 2, postStatSpacing : Int = 2, maxObjs : Int
   /** Format a list of statements in Turtle
    * @param out The appendable buffer to add the result to
    */
-  def format(statList : StatementSet, out : Appendable) : Unit = {
+  def format(statList : TripleSet, out : Appendable) : Unit = {
     val (theMap,nameSpaces,dupes) = buildMap(statList) 
     
     nameSpaces += RDF
@@ -101,7 +101,7 @@ class TurtlePrinter(tabWidth : Int = 2, postStatSpacing : Int = 2, maxObjs : Int
     }
   }
   
-  private def buildMap(statList : StatementSet) = {
+  private def buildMap(statList : TripleSet) = {
     val theMap = new HashMap[Resource, HashMap[NamedNode, HashSet[Value]]]();
     val nameSpaces = new HashSet[NameSpace]()
     val mentioned = new HashSet[BlankNode]()
@@ -254,7 +254,7 @@ object TurtleParser {
     def parse(doc:String) = {
       val parser = new Parser
       parser.parseAll(parser.turtleDoc, doc) match {
-        case parser.Success(p : List[_], _) => new StdStatementSet(deparse(p).toSet)
+        case parser.Success(p : List[_], _) => TripleSet fromSet (deparse(p).toSet)
         case parser.Failure(msg, in) => throw new RDFTurtleParseException(msg + " @ " + getNextN(20,in))
         case _ => throw new RDFTurtleParseException("Unexpected parse result")
       }
@@ -267,7 +267,7 @@ object TurtleParser {
     def parse(in: java.io.Reader) = {
       val parser = new Parser
       parser.parseAll(parser.turtleDoc, in) match {
-        case parser.Success(p : List[_], _) => new StdStatementSet(deparse(p).toSet)
+        case parser.Success(p : List[_], _) => TripleSet fromSet (deparse(p).toSet)
         case parser.Failure(msg, in) => throw new RDFTurtleParseException(msg + " @ " + getNextN(20,in))
         case _ => throw new RDFTurtleParseException("Unexpected parse result")
       }
@@ -278,9 +278,9 @@ object TurtleParser {
       else { in.first + getNextN(n-1,in.rest) }
     }
     
-    private def deparse(ps:List[Any]) : List[Statement] = {
+    private def deparse(ps:List[Any]) : List[Triple] = {
       ps.flatMap(res => res match {
-        case x : Statement => List(x)
+        case x : Triple => List(x)
         case x : List[_] => deparse(x)
         case _ => Nil
       })
@@ -319,20 +319,20 @@ object TurtleParser {
       
       def triples = subject ~ predicateObjectList ^^ { case (node,stats) ~ y => makeTriple(node,y) ::: stats }
       
-      def predicateObjectList : Parser[List[~[NamedNode,List[Tuple2[Value,List[Statement]]]]]] =
+      def predicateObjectList : Parser[List[~[NamedNode,List[Tuple2[Value,List[Triple]]]]]] =
         repsep(verb ~ objectList , ";" )
       
-      def objectList : Parser[List[Tuple2[Value,List[Statement]]]] = repsep( objct, "," )
+      def objectList : Parser[List[Tuple2[Value,List[Triple]]]] = repsep( objct, "," )
       
       def verb : Parser[NamedNode] = literal("a") ^^ { case _ => RDF._type } | predicate
       
       def comment = """#([^\n])*"""r
       
-      def subject : Parser[Tuple2[Resource, List[Statement]]] = resource ^^ { case x => (x,Nil) } | blank 
+      def subject : Parser[Tuple2[Resource, List[Triple]]] = resource ^^ { case x => (x,Nil) } | blank 
       
       def predicate = resource
       
-      def objct : Parser[Tuple2[Value,List[Statement]]] = resource ^^ { case x => (x,Nil) } | blank | 
+      def objct : Parser[Tuple2[Value,List[Triple]]] = resource ^^ { case x => (x,Nil) } | blank | 
         lit ^^ { case x => (x,Nil) }
       
       def lit = datatypeString ^^ { case x ~ y => new TypedLiteral(x.toString, y) } |  
@@ -351,33 +351,33 @@ object TurtleParser {
       
       def bool = "true" | "false"
       
-      def blank : Parser[Tuple2[Resource, List[Statement]]] = 
+      def blank : Parser[Tuple2[Resource, List[Triple]]] = 
         blankNodeID | blankNodeEmpty | blankNodePreds | blankNodeCollection
         
       
-      def blankNodeID : Parser[Tuple2[Resource, List[Statement]]]= 
+      def blankNodeID : Parser[Tuple2[Resource, List[Triple]]]= 
         "_:" ~> nodeID ^^ { case nodeID => (nodeID,Nil) } 
       
-      def blankNodeEmpty : Parser[Tuple2[Resource, List[Statement]]] = 
+      def blankNodeEmpty : Parser[Tuple2[Resource, List[Triple]]] = 
         regex("""\[\w*\]"""r) ^^ { case _ => (new BlankNode("id" + abs(rand.nextLong)),Nil) } 
       
       
-      def blankNodePreds : Parser[Tuple2[Resource, List[Statement]]] = 
+      def blankNodePreds : Parser[Tuple2[Resource, List[Triple]]] = 
       "[" ~> predicateObjectList <~ "]" ^^ { case x => {
           val bn = new BlankNode("id" + abs(rand.nextLong))
           (bn,makeTriple(bn,x)) 
         }
       }
           
-      def blankNodeCollection : Parser[Tuple2[Resource, List[Statement]]] = 
+      def blankNodeCollection : Parser[Tuple2[Resource, List[Triple]]] = 
       "(" ~> collection ^^ { x =>
          val bn = AnonymousNode
          (bn,makeCollection(bn,x)) 
       }
       
-      def itemList : Parser[List[Tuple2[Value,List[Statement]]]] = objct*
+      def itemList : Parser[List[Tuple2[Value,List[Triple]]]] = objct*
       
-      def collection : Parser[List[Tuple2[Value,List[Statement]]]] = (itemList) <~ ")"
+      def collection : Parser[List[Tuple2[Value,List[Triple]]]] = (itemList) <~ ")"
       
       def resource : Parser[NamedNode] = uriref | qname
       
@@ -415,14 +415,14 @@ object TurtleParser {
       def longString = regex(("\"\"\"" + """(([^"])|(\"))*?""" + "\"\"\"")r) ^^ { case x => x.substring(3,x.length - 3) }
       
       private def makeTriple(subject:Resource, 
-      predObjs : List[~[NamedNode,List[Tuple2[Value,List[Statement]]]]]) : List[Statement] = {
+      predObjs : List[~[NamedNode,List[Tuple2[Value,List[Triple]]]]]) : List[Triple] = {
         predObjs.flatMap{
-          case pred ~ objs => objs.flatMap { case (obj,stats) => Statement(subject,pred,obj) :: stats }
+          case pred ~ objs => objs.flatMap { case (obj,stats) => Triple(subject,pred,obj) :: stats }
         }
       }
       
-      private def makeCollection(node:Resource, elems:List[Tuple2[Value,List[Statement]]]) 
-      : List[Statement] = {
+      private def makeCollection(node:Resource, elems:List[Tuple2[Value,List[Triple]]]) 
+      : List[Triple] = {
         elems match {
           case (obj,stats) :: Nil => {
             (node %> RDF.rest %> RDF.nil) :: (node %> RDF.first %> obj) :: stats
