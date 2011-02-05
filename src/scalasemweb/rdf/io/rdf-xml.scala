@@ -15,10 +15,10 @@ object RDFXML extends RDFWriter with RDFParser {
   private val xsduri = """http://www.w3.org/2001/XMLScheme-datatypes"""
   
   
-  def write(statList : StatementSet[Statement]) : String = {
+  def write(statList : StatementSet) : String = {
     convert(statList).toString() 
   }
-  def write(statList : StatementSet[Statement], out : Appendable) {
+  def write(statList : StatementSet, out : Appendable) {
     out match {
       case w : Writer => XML.write(w,convert(statList),"UTF-8",true,null)
       case _ => {
@@ -29,7 +29,7 @@ object RDFXML extends RDFWriter with RDFParser {
     }
   }
   @throws(classOf[RDFXMLFormatException])
-  def parse(doc:String) : StatementSet[Statement] = {
+  def parse(doc:String) : StatementSet = {
     try {
       convert(XML.loadString(doc))
     } catch {
@@ -37,7 +37,7 @@ object RDFXML extends RDFWriter with RDFParser {
     }
   }
   @throws(classOf[RDFXMLFormatException])
-  def parse(in: java.io.Reader) : StatementSet[Statement] = {
+  def parse(in: java.io.Reader) : StatementSet = {
     try {
       convert(XML.load(in))
     } catch {
@@ -45,7 +45,7 @@ object RDFXML extends RDFWriter with RDFParser {
     }
   }
   
-  def convert(xmlDoc : Node) : StatementSet[Statement] = {
+  def convert(xmlDoc : Node) : StatementSet = {
     if(xmlDoc.prefix == "rdf" &&
        xmlDoc.label == "RDF") {
          val parser = new RDFXMLParser
@@ -302,7 +302,7 @@ object RDFXML extends RDFWriter with RDFParser {
      * Format a list of statements in Turtle
      * @param statList The list of statements
      */
-    def convert(statList : StatementSet[Statement]) : Node = {
+    def convert(statList : StatementSet) : Node = {
       var (theMap,nameSpaces,dupes) = RDFXMLConverter.buildMap(statList) 
       
       nameSpaces += RDF
@@ -357,7 +357,7 @@ object RDFXML extends RDFWriter with RDFParser {
       }
     }
     
-    def buildMap(statList : StatementSet[Statement]) = {
+    def buildMap(statList : StatementSet) = {
       val theMap = new HashMap[Resource, HashMap[NamedNode, LinkedList[Value]]]();
       val nameSpaces = new HashSet[NameSpace]()
       val mentioned = new HashSet[BlankNode]()

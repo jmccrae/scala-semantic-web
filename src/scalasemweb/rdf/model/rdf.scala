@@ -17,7 +17,7 @@ trait Value
 trait Resource extends Value {
   /** Construct a RDF pair */
   def %>(pred:NamedNode) = new %>(this,pred)
-  def %>*(predObjs:PredObj*) : StatementSet[Statement] = {
+  def %>*(predObjs:PredObj*) : StatementSet = {
   	new StdStatementSet((predObjs map { 
 			predObj => Statement(this, predObj._1,predObj._2)
     }).toSet)
@@ -121,7 +121,7 @@ case class TypedLiteral(val value:String, val typ:NamedNode) extends Literal {
  */
 class %>(val subject : Resource, val predicate : NamedNode) extends RDFPair[Resource,NamedNode] {
 	def %>(obj : Value) = new Statement(this,obj)
-  def %>*(vals:Value*) : StatementSet[Statement] = new StdStatementSet((vals map { 
+  def %>*(vals:Value*) : StatementSet = new StdStatementSet((vals map { 
   	(value:Value) => new Statement(this,value) 
   }).toSet)
   def _1 = subject
@@ -183,19 +183,31 @@ case class NameSpace(val id:String, val prefix:String) {
 /////////////////////////////////////////////////////////////////////////////////////////////
 // StatementSet
 
-trait StatementSet[Stat <: Statement] extends Set[Stat] {
+import scala.collection._
+import scala.collection.mutable.Builder
+
+trait StatementSet extends Set[Statement] with SetLike[Statement,StatementSet] {
 	def has(subject : Option[Resource], predicate : Option[NamedNode], obj : Option[Value]) : Boolean
-	def get(subject : Option[Resource], predicate : Option[NamedNode], obj : Option[Value]) : StatementSet[Stat]
+	def get(subject : Option[Resource], predicate : Option[NamedNode], obj : Option[Value]) : StatementSet
+	override def empty : StatementSet = new StdStatementSet(Set())
 }
 
 object StatementSet {
 	def apply(statements : Statement*) = new StdStatementSet(statements.toSet)
+	
+	private def fromSet(statements : Set[Statement]) = new StdStatementSet(statements)
+	
+	def newBuilder : Builder[Statement, StatementSet] = {
+	  new scala.collection.mutable.HashSet[Statement] mapResult {
+	    x => fromSet(x) 
+	  }
+	}
 }
 
-class StdStatementSet[Stat <: Statement](statements : Set[Stat]) extends StatementSet[Stat] {
-	def -(statement : Stat) = new StdStatementSet(statements - statement)
-	def +(statement : Stat) = new StdStatementSet(statements + statement) 
-	def contains(statement : Stat) = statements.contains(statement)
+class StdStatementSet(statements : Set[Statement]) extends StatementSet {
+	def -(statement : Statement) = new StdStatementSet(statements - statement)
+	def +(statement : Statement) = new StdStatementSet(statements + statement) 
+	def contains(statement : Statement) = statements.contains(statement)
 	def iterator = statements.iterator
 	def has(subject : Option[Resource], predicate : Option[NamedNode], obj : Option[Value]) : Boolean = {
 		subject match {
@@ -249,7 +261,7 @@ class StdStatementSet[Stat <: Statement](statements : Set[Stat]) extends Stateme
 			}
 		}
 	}
-	def get(subject : Option[Resource], predicate : Option[NamedNode], obj : Option[Value]) : StdStatementSet[Stat] = {
+	def get(subject : Option[Resource], predicate : Option[NamedNode], obj : Option[Value]) : StdStatementSet = {
 		new StdStatementSet (subject match {
 			case Some(subj) => {
 				predicate match {

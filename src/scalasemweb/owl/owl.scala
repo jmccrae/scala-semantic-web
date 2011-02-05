@@ -83,7 +83,7 @@ object OWL extends NameSpace("owl","""http://www.w3.org/2002/07/owl#""") {
  val versionInfo                  = this&"versionInfo"
 }
 
-trait OWLEntity extends StatementSet[Statement]{
+trait OWLEntity extends StatementSet{
   def resource : Resource
   def annotations(annos : Tuple2[NamedNode,Value]*) = {
     new StdStatementSet(this ++ (annos map {
@@ -93,29 +93,29 @@ trait OWLEntity extends StatementSet[Statement]{
 }
 
 trait OWLClass extends OWLEntity {
-  def subClassOf(clazzes : OWLClass*) : StatementSet[Statement] = {
+  def subClassOf(clazzes : OWLClass*) : StatementSet = {
     new StdStatementSet(this ++ (clazzes flatMap { 
       clazz => clazz + (resource %> RDFS.subClassOf %> clazz.resource) 
     }))
   }
-  def equivalentClass(clazzes : OWLClass*) : StatementSet[Statement] = {
+  def equivalentClass(clazzes : OWLClass*) : StatementSet = {
     new StdStatementSet(this ++ (clazzes flatMap { 
       clazz => clazz + (resource %> OWL.equivalentClass %> clazz.resource)
     }))
   }
-  def disjointWith(clazzes : OWLClass*) : StatementSet[Statement] = {
+  def disjointWith(clazzes : OWLClass*) : StatementSet = {
     new StdStatementSet(this ++ (clazzes flatMap { 
       clazz => clazz + (resource %> OWL.disjointWith %> clazz.resource)
     }))
   }
-  def disjointUnionOf(clazzList : Iterable[OWLClass]) : StatementSet[Statement] = {
+  def disjointUnionOf(clazzList : Iterable[OWLClass]) : StatementSet = {
     val list = RDFList(clazzList map (_.resource))
     new StdStatementSet(this + (resource %> OWL.disjointUnionOf %> list.node) ++ list ++ (clazzList flatMap (x=>x)))
   }
 }
 
 trait OWLClassExpr extends OWLClass {
-  def subClasses : Set[OWLClassExpr] = {
+ /* def subClasses : Set[OWLClassExpr] = {
     get(Some(resource), Some(RDFS.subClassOf), None) map {
       case res : Resource => new StdStatementSet(this) with OWLClassExpr {
         def resource = res
@@ -152,14 +152,14 @@ trait OWLClassExpr extends OWLClass {
       }
       case x => throw new OWLException(x + " was stated as a disjoint union list but is not a resource")
     }
-  }
+  }*/
 }
 
 object OWLClass {
   def apply(res : Resource) : OWLClassExpr = new StdStatementSet(Set(res %> RDF._type %> OWL._Class)) with OWLClassExpr {
     def resource = res
   }
-  def unapply(ss : StatementSet[Statement]) : Option[Resource] = {
+  def unapply(ss : StatementSet) : Option[Resource] = {
     if(ss.size == 1) {
       ss.head match {
         case res %> RDF._type %> OWL._Class => Some(res)
@@ -172,17 +172,17 @@ object OWLClass {
 }
 
 trait ObjectProperty extends OWLEntity {
-  def domain(clazzes : OWLClass*) : StatementSet[Statement] = {
+  def domain(clazzes : OWLClass*) : StatementSet = {
     new StdStatementSet(this ++ (clazzes flatMap {
       clazz => clazz + (resource %> RDFS.domain %> clazz.resource)
     }))
   }
-  def range(clazzes : OWLClass*) : StatementSet[Statement] = {
+  def range(clazzes : OWLClass*) : StatementSet = {
     new StdStatementSet(this ++ (clazzes flatMap {
       clazz => clazz + (resource %> RDFS.range %> clazz.resource)
     }))
   }
-  def subPropertyOf(objProps : ObjectProperty*) : StatementSet[Statement] = {
+  def subPropertyOf(objProps : ObjectProperty*) : StatementSet = {
     new StdStatementSet(this ++ (objProps flatMap {
       objProp => objProp + (resource %> RDFS.subPropertyOf %> objProp.resource)
     }))

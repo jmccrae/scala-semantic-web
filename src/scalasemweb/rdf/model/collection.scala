@@ -6,7 +6,7 @@ import scala.annotation._
 /////////////////////////////////////////////////////////////////////////////////////////////
 // Collections
 
-trait RDFList extends StatementSet[Statement] {
+trait RDFList extends StatementSet {
   def _first : Value
   def _rest : RDFList  
   def node : Resource
@@ -36,7 +36,7 @@ object RDFList {
       }
     }
   }
-  def getList(res : Resource, statSet : StatementSet[Statement]) : Option[RDFList] = {
+  def getList(res : Resource, statSet : StatementSet) : Option[RDFList] = {
     val restTrip = statSet.get(Some(res),Some(RDF.rest),None)
     val firstTrip = statSet.get(Some(res),Some(RDF.first),None)
     if(restTrip.size == 1 && firstTrip.size == 1) {
@@ -70,8 +70,8 @@ object RDFList {
     }
   }       
     
-  def unapplySeq(statSet : StatementSet[Statement]) : Option[Seq[Value]] = {
-    @tailrec def revBuildList(stats : Set[Statement], node : Resource, vals : List[Value]) : Option[List[Value]] = {
+  def unapplySeq(statSet : StatementSet) : Option[Seq[Value]] = {
+    @tailrec def revBuildList(stats : StatementSet, node : Resource, vals : List[Value]) : Option[List[Value]] = {
       val restTrip = statSet.get(None,Some(RDF.rest),Some(node))
       if(restTrip.size == 1) {
         val n = restTrip.head.subj
