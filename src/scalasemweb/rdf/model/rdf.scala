@@ -1,6 +1,5 @@
 package scalasemweb.rdf.model
 
-import scalasemweb.rdf.model.aux._
 import java.net.URI
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -230,6 +229,12 @@ trait TripleSet extends Set[Triple] with SetLike[Triple,TripleSet] {
 	def ++(view : View) : TripleSet = this ++ (view.frame)
 	/** Remove a view from this statement set */
 	def --(view : View) : TripleSet = this -- (view.frame)
+	/** Get this triple set as a view on itself */
+	def toView : View = new View {
+	  def frame = TripleSet.this
+	  def triples = TripleSet.this
+	  override def isExact = true
+	}
 }
 
 object TripleSet {
@@ -376,11 +381,11 @@ private class StdTripleSet(statements : Set[Triple]) extends TripleSet {
  */
 trait View {
   /** The underlying triple set being viewed */
-  def statements : TripleSet
+  def triples : TripleSet
   /** The set of triples of interest to this view */
   def frame : TripleSet
   /** Returns true is the underlying triple set is also the frame */ 
-  def isExact : Boolean = statements == frame
+  def isExact : Boolean = triples == frame
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////

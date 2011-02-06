@@ -2,7 +2,8 @@ package scalasemweb.rdf.collection
 
 import scalasemweb.rdf.model._
 import scala.annotation._
-import scala.collection.immutable._
+import scala.collection.LinearSeqLike
+import scala.collection.immutable.{LinearSeq}
 import scala.collection.generic._
 import scala.collection.mutable.Builder
 import java.util.NoSuchElementException
@@ -10,7 +11,9 @@ import java.util.NoSuchElementException
 /////////////////////////////////////////////////////////////////////////////////////////////
 // Container
 
-trait RDFContainer extends View with LinearSeq[Value] 
+trait RDFContainer extends View with LinearSeq[Value] with LinearSeqLike[Value,RDFContainer] {
+  protected[this] override def newBuilder = RDFContainer.newBuilder
+}
 
 object RDFContainer {
   def apply(vals : Value*) : RDFContainer = {
@@ -24,7 +27,7 @@ object RDFContainer {
     new RDFContainerIndex(1,n,viewStats,true)
   }
   
-  def apply(node : Resource, statements : TripleSet) : RDFContainer = new RDFContainerIndex(1,node,statements,false)
+  def apply(node : Resource, triples : TripleSet) : RDFContainer = new RDFContainerIndex(1,node,triples,false)
   
   private lazy val _empty = new RDFContainerIndex(1,AnonymousNode,TripleSet.empty,true)
 	def empty  : RDFContainer = _empty
@@ -52,10 +55,10 @@ object RDFContainer {
 	}
 }
 
-private class RDFContainerIndex(index : Int, node : Resource, val statements : TripleSet, _exact : Boolean) extends RDFContainer {
+private class RDFContainerIndex(index : Int, node : Resource, val triples : TripleSet, _exact : Boolean) extends RDFContainer {
   override def isEmpty = _head == None
   
-  private lazy val _head = statements.get(Some(node),Some(RDF&("_"+index)),None) match {
+  private lazy val _head = triples.get(Some(node),Some(RDF&("_"+index)),None) match {
     case TripleSet(_ %> _ %> head) =>  Some(head)
     case _ => None
   }
@@ -64,19 +67,19 @@ private class RDFContainerIndex(index : Int, node : Resource, val statements : T
     case None =>  throw new NoSuchElementException("Head of empty container")
   }
   
-  private lazy val _tail =  new RDFContainerIndex(index+1,node,statements,_exact)
+  private lazy val _tail =  new RDFContainerIndex(index+1,node,triples,_exact)
   override def tail = if(isEmpty) {
     throw new NoSuchElementException("Tail of empty container")
   } else {
     _tail
   }
   
-  def frame = if(_exact) {
-    statements
+  private lazy val _frame = if(_exact) {
+    triples
   } else {
     var viewStats = TripleSet.empty
     var i = 0;
-    while(statements.get(Some(node),Some(RDF&("_"+i)),None) match {
+    while(triples.get(Some(node),Some(RDF&("_"+i)),None) match {
       case TripleSet(stat) => {
         viewStats += stat
         i += 1
@@ -86,10 +89,11 @@ private class RDFContainerIndex(index : Int, node : Resource, val statements : T
     }) { }
     viewStats
   }
+  def frame = _frame
   
   override def isExact = _exact
   
-  def apply(i : Int) = statements.get(Some(node),Some(RDF&("_"+(i-index))),None) match {
+  def apply(i : Int) = triples.get(Some(node),Some(RDF&("_"+(i-index))),None) match {
     case TripleSet(_ %> _ %> value) => value
     case _ => throw new IndexOutOfBoundsException()
   }
@@ -100,34 +104,35 @@ private class RDFContainerIndex(index : Int, node : Resource, val statements : T
 /////////////////////////////////////////////////////////////////////////////////////////////
 // List
 
-trait RDFList extends View with LinearSeq[Value] {
+trait RDFList extends View with LinearSeq[Value] with LinearSeqLike[Value,RDFList] {
   def node : Resource
+  protected[this] override def newBuilder = RDFList.newBuilder
 }
 
-private class RDFNil(val statements : TripleSet = TripleSet.empty) extends RDFList {
+private class RDFNil(val triples : TripleSet = TripleSet.empty) extends RDFList {
   def node = RDF.nil
   def frame = TripleSet.empty
   override def isEmpty = true
   override def head = throw new NoSuchElementException("Head of empty list")
   override def tail = throw new NoSuchElementException("Tail of empty list")
-  override def isExact = statements.isEmpty
+  override def isExact = triples.isEmpty
   def apply(i : Int) = throw new IndexOutOfBoundsException
   def length = 0
 }
 
-private class RDFListNode(_node : Resource, val statements : TripleSet, exact : Boolean) extends RDFList {
-  private lazy val _head = statements.get(Some(node),Some(RDF.first),None) match {
+private class RDFListNode(_node : Resource, val triples : TripleSet, exact : Boolean) extends RDFList {
+  private lazy val _head = triples.get(Some(node),Some(RDF.first),None) match {
     case TripleSet(_ %> _ %> first) => first
     case _ => throw new RDFCollectionException("No or more than one first node")
   }
   override def head = _head
-  private lazy val _tail = statements.get(Some(node),Some(RDF.rest),None) match {
+  private lazy val _tail = triples.get(Some(node),Some(RDF.rest),None) match {
     case TripleSet(_ %> _ %> rest) => rest match {
-      case RDF.nil => new RDFNil(statements)
+      case RDF.nil => new RDFNil(triples)
       case x : Resource => if(exact) {
-        new RDFListNode(x,statements - (_node %> RDF.first %> _head) - (_node %> RDF.rest %> rest),true)
+        new RDFListNode(x,triples - (_node %> RDF.first %> _head) - (_node %> RDF.rest %> rest),true)
       } else {
-        new RDFListNode(x,statements,false)
+        new RDFListNode(x,triples,false)
       }
       case _ => throw new RDFCollectionException("Rest node was a literal")
     }
@@ -135,11 +140,12 @@ private class RDFListNode(_node : Resource, val statements : TripleSet, exact : 
   }
   override def tail = _tail
   override def isEmpty = false
-  def frame = if(exact) {
-    statements
+  private lazy val _frame = if(exact) {
+    triples
   } else {
     tail.frame + (node %> RDF.first %> head) + (node %> RDF.rest %> tail.node)
   }
+  def frame = _frame
   def node = _node
   override def isExact = exact
   def apply(i : Int) : Value = if(i == 0) {
@@ -151,33 +157,36 @@ private class RDFListNode(_node : Resource, val statements : TripleSet, exact : 
 }
 
 object RDFList {
-  def apply(vals : Value*) : RDFList =  if(vals.isEmpty) {
+  def apply(vals : Value*) : RDFList = fromSeq(vals)  
+  
+  def apply(node : Resource, triples : TripleSet) : RDFList = node match {
+    case RDF.nil => new RDFNil(triples)
+    case res => new RDFListNode(res,triples,false)
+  }
+  
+  def fromSeq(vals : Iterable[Value]) : RDFList = if(vals.isEmpty) {
     new RDFNil(TripleSet.empty)
   } else {
     val f = vals.head
-    val r = apply(vals.tail:_*)
+    val r = fromSeq(vals.tail)
     val n = AnonymousNode
-    new RDFListNode(n,r.statements + (n %> RDF.first %> f) + (n %> RDF.rest %> r.node), true)
+    new RDFListNode(n,r.triples + (n %> RDF.first %> f) + (n %> RDF.rest %> r.node), true)
   }
   
-  def apply(node : Resource, statements : TripleSet) : RDFList = node match {
-    case RDF.nil => new RDFNil(statements)
-    case res => new RDFListNode(res,statements,false)
-  }
-  
-  def empty = new RDFNil(StatementSet.empty)
+  def empty : RDFList = new RDFNil(TripleSet.empty)
   
   def newBuilder : Builder[Value,RDFList] = new Builder[Value,RDFList] {
 	  private var tripSet = TripleSet.empty
-	  private var prev : Option[Resource] = None
 	  private var head : Resource = RDF.nil
+	  private var prev : Option[Resource] = None
     def +=(value : Value) = {
       val node = AnonymousNode
       tripSet += (node %> RDF.first %> value)
       prev match {
-        case Some(previous) =>  tripSet += (previous %> RDF.rest %> node)
-        case None => head = node
+        case None => head = node 
+        case Some(previous) => tripSet += (previous %> RDF.rest %> node)
       }
+      prev = Some(node)
       this
     }
     def clear {
