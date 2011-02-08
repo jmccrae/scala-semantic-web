@@ -2,16 +2,17 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html>
         <head>
-          <title>Scaladoc for scala.rdf.URIRef</title>
+          <title>scala.rdf.URIRef</title>
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-		      <script type="text/javascript" src="../../lib/jquery.js"></script>
           
       <link href="../../lib/template.css" rel="stylesheet" type="text/css" media="screen" />
+      <script type="text/javascript" src="../../lib/jquery.js"></script>
+      <script type="text/javascript" src="../../lib/jquery-ui.js"></script>
       <script type="text/javascript" src="../../lib/template.js"></script>
       <script type="text/javascript" src="../../lib/tools.tooltip.js"></script>
     
         </head>
-        <body class="type">
+        <body class="type" onload="windowTitle();">
 
       <p id="owner"><a href="../package.html" class="extype" name="scala">scala</a>.<a href="package.html" class="extype" name="scala.rdf">rdf</a></p>
 
@@ -21,57 +22,86 @@
       </div>
 
       <h4 class="signature" id="signature">
-      <span class="kind">class</span>
+      <span class="kind">case class</span>
       <span class="symbol">
-        <span class="name">URIRef</span><span class="params">(<span name="uri">uri: <span class="extype" name="java.net.URI">URI</span></span>)</span><span class="result"> extends <a href="NamedNode.html" class="extype" name="scala.rdf.NamedNode">NamedNode</a> with <span class="extype" name="scala.Product">Product</span></span>
+        <span class="name">URIRef</span>
+        
+        <span class="params">(<span name="uri">uri: <span class="extype" name="java.net.URI">URI</span></span>)</span>
+        <span class="result"> extends <a href="NamedNode.html" class="extype" name="scala.rdf.NamedNode">NamedNode</a> with <span class="extype" name="scala.Product">Product</span></span>
       </span>
       </h4>
       <div class="fullcomment" id="comment"><div class="comment cmt"><p>A single URI name</p></div><dl class="paramcmts block"><dt class="param">uri</dt><dd class="cmt"><p>The URI value of the node
 </p></dd></dl><div class="block">
             go to: <a href="URIRef$.html">companion</a>
+          </div><div class="block">
+            linear super types: <span class="extype" name="scala.Product">Product</span>, <span class="extype" name="scala.Equals">Equals</span>, <a href="NamedNode.html" class="extype" name="scala.rdf.NamedNode">NamedNode</a>, <a href="Resource.html" class="extype" name="scala.rdf.Resource">Resource</a>, <a href="Value.html" class="extype" name="scala.rdf.Value">Value</a>, AnyRef, <span class="extype" name="scala.Any">Any</span>
           </div>
             
             
             
-            
           </div>
-      
+
       <div id="template">
 
         <div id="mbrsel">
+          <div id="textfilter"><span class="pre"></span><span class="input"><input accesskey="/" type="text" /></span><span class="post"></span></div>
+          <div id="order">
+                <span class="filtertype">Ordering</span>
+                <ol><li class="alpha in">Alphabetic</li><li class="inherit out">By inheritance</li></ol>
+              </div>
           <div id="ancestors">
                 <span class="filtertype">Inherited</span>
                 <ol><li class="hideall">Hide All</li><li class="showall">Show all</li></ol>
-                <ol id="linearization"><li class="in" name="scala.Product">Product</li><li class="in" name="scala.Equals">Equals</li><li class="in" name="scala.rdf.NamedNode">NamedNode</li><li class="in" name="scala.rdf.Resource">Resource</li><li class="in" name="scala.rdf.Value">Value</li><li class="in" name="scala.AnyRef">AnyRef</li><li class="in" name="scala.Any">Any</li></ol>
+                <ol id="linearization"><li class="in" name="scala.rdf.URIRef">URIRef</li><li class="in" name="scala.Product">Product</li><li class="in" name="scala.Equals">Equals</li><li class="in" name="scala.rdf.NamedNode">NamedNode</li><li class="in" name="scala.rdf.Resource">Resource</li><li class="in" name="scala.rdf.Value">Value</li><li class="in" name="scala.AnyRef">AnyRef</li><li class="in" name="scala.Any">Any</li></ol>
               </div>
           <div id="visbl">
-            <span class="filtertype">Visibility</span>
-            <ol><li class="public in">Public</li><li class="all out">All</li></ol>
-          </div>
+              <span class="filtertype">Visibility</span>
+              <ol><li class="public in">Public</li><li class="all out">All</li></ol>
+            </div>
+          <div id="impl">
+              <span class="filtertype">Impl.</span>
+              <ol><li class="concrete in">Concrete</li><li class="abstract in">Abstract</li></ol>
+            </div>
         </div>
-        
+
         <div class="members" id="constructors">
               <h3>Instance constructors</h3>
-              <ol><li visbl="pub" name="scala.rdf.URIRef#this">
+              <ol><li visbl="pub" data-isabs="false" name="scala.rdf.URIRef#this">
+      <a id="this:URIRef"></a>
       <h4 class="signature">
       <span class="kind">new</span>
       <span class="symbol">
-        <span class="name">URIRef</span><span class="params">(<span name="uri">uri: <span class="extype" name="java.net.URI">URI</span></span>)</span>
+        <span class="name">URIRef</span>
+        
+        <span class="params">(<span name="uri">uri: <span class="extype" name="java.net.URI">URI</span></span>)</span>
+        
       </span>
       </h4>
       
+            <p class="shortcomment cmt"></p>
+            <div class="fullcomment"><div class="comment cmt"></div><dl class="paramcmts block"><dt class="param">uri</dt><dd class="cmt"><p>The URI value of the node
+</p></dd></dl>
+            
+            
+            
+          </div>
+          
     </li></ol>
-            </div>        
+            </div>
+
         
-        
-        
-        <div class="members" id="values">
+
+        <div class="values members" id="values">
               <h3>Value Members</h3>
-              <ol><li visbl="pub" name="scala.AnyRef#!=">
+              <ol><li visbl="pub" data-isabs="false" name="scala.AnyRef#!=">
+      <a id="!=(AnyRef):Boolean"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">!=</span><span class="params">(<span name="arg0">arg0: AnyRef</span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">!=</span>
+        
+        <span class="params">(<span name="arg0">arg0: AnyRef</span>)</span>
+        <span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
       </h4>
       
@@ -82,11 +112,15 @@
           definition classes: AnyRef
         </div></div>
           
-    </li><li visbl="pub" name="scala.Any#!=">
+    </li><li visbl="pub" data-isabs="false" name="scala.Any#!=">
+      <a id="!=(Any):Boolean"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">!=</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">!=</span>
+        
+        <span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span>
+        <span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
       </h4>
       
@@ -100,14 +134,17 @@
             
             
             
-            
           </div>
           
-    </li><li visbl="pub" name="scala.AnyRef###">
+    </li><li visbl="pub" data-isabs="false" name="scala.AnyRef###">
+      <a id="##():Int"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">##</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+        <span class="name">##</span>
+        
+        <span class="params">()</span>
+        <span class="result">: <span class="extype" name="scala.Int">Int</span></span>
       </span>
       </h4>
       
@@ -118,11 +155,15 @@
           definition classes: AnyRef → Any
         </div></div>
           
-    </li><li visbl="pub" name="scala.AnyRef#$asInstanceOf">
+    </li><li visbl="pub" data-isabs="false" name="scala.AnyRef#$asInstanceOf">
+      <a id="$asInstanceOf[T0]():T0"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">$asInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="params">()</span><span class="result">: T0</span>
+        <span class="name">$asInstanceOf</span>
+        <span class="tparams">[<span name="T0">T0</span>]</span>
+        <span class="params">()</span>
+        <span class="result">: T0</span>
       </span>
       </h4>
       
@@ -133,11 +174,15 @@
           definition classes: AnyRef
         </div></div>
           
-    </li><li visbl="pub" name="scala.AnyRef#$isInstanceOf">
+    </li><li visbl="pub" data-isabs="false" name="scala.AnyRef#$isInstanceOf">
+      <a id="$isInstanceOf[T0]():Boolean"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">$isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">$isInstanceOf</span>
+        <span class="tparams">[<span name="T0">T0</span>]</span>
+        <span class="params">()</span>
+        <span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
       </h4>
       
@@ -148,11 +193,15 @@
           definition classes: AnyRef
         </div></div>
           
-    </li><li visbl="pub" name="scala.AnyRef#==">
+    </li><li visbl="pub" data-isabs="false" name="scala.AnyRef#==">
+      <a id="==(AnyRef):Boolean"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">==</span><span class="params">(<span name="arg0">arg0: AnyRef</span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">==</span>
+        
+        <span class="params">(<span name="arg0">arg0: AnyRef</span>)</span>
+        <span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
       </h4>
       
@@ -166,14 +215,17 @@
             
             
             
-            
           </div>
           
-    </li><li visbl="pub" name="scala.Any#==">
+    </li><li visbl="pub" data-isabs="false" name="scala.Any#==">
+      <a id="==(Any):Boolean"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">==</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">==</span>
+        
+        <span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span>
+        <span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
       </h4>
       
@@ -187,14 +239,17 @@
             
             
             
-            
           </div>
           
-    </li><li visbl="pub" name="scala.Any#asInstanceOf">
+    </li><li visbl="pub" data-isabs="false" name="scala.Any#asInstanceOf">
+      <a id="asInstanceOf[T0]:T0"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">asInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: T0</span>
+        <span class="name">asInstanceOf</span>
+        <span class="tparams">[<span name="T0">T0</span>]</span>
+        
+        <span class="result">: T0</span>
       </span>
       </h4>
       
@@ -209,14 +264,17 @@ part of compilation it is not possible to check whether the contents of the list
             
             
             
-            
           </div>
           
-    </li><li visbl="pub" name="scala.rdf.URIRef#canEqual">
+    </li><li visbl="pub" data-isabs="false" name="scala.rdf.URIRef#canEqual">
+      <a id="canEqual(Any):Boolean"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">canEqual</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">canEqual</span>
+        
+        <span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span>
+        <span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
       </h4>
       
@@ -225,11 +283,15 @@ part of compilation it is not possible to check whether the contents of the list
           definition classes: <a href="" class="extype" name="scala.rdf.URIRef">URIRef</a> → Equals
         </div></div>
           
-    </li><li visbl="prt" name="scala.AnyRef#clone">
+    </li><li visbl="prt" data-isabs="false" name="scala.AnyRef#clone">
+      <a id="clone():AnyRef"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">clone</span><span class="params">()</span><span class="result">: AnyRef</span>
+        <span class="name">clone</span>
+        
+        <span class="params">()</span>
+        <span class="result">: AnyRef</span>
       </span>
       </h4>
       
@@ -243,14 +305,17 @@ part of compilation it is not possible to check whether the contents of the list
             
             
             
-            
           </div>
           
-    </li><li visbl="pub" name="scala.AnyRef#eq">
+    </li><li visbl="pub" data-isabs="false" name="scala.AnyRef#eq">
+      <a id="eq(AnyRef):Boolean"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: AnyRef</span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">eq</span>
+        
+        <span class="params">(<span name="arg0">arg0: AnyRef</span>)</span>
+        <span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
       </h4>
       
@@ -277,14 +342,17 @@ should be equal to each other (<code>o1 == o2</code>) and they should hash to th
             
             
             
-            
           </div>
           
-    </li><li visbl="pub" name="scala.rdf.URIRef#equals">
+    </li><li visbl="pub" data-isabs="false" name="scala.rdf.URIRef#equals">
+      <a id="equals(Any):Boolean"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">equals</span><span class="params">(<span name="obj">obj: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">equals</span>
+        
+        <span class="params">(<span name="obj">obj: <span class="extype" name="scala.Any">Any</span></span>)</span>
+        <span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
       </h4>
       
@@ -306,14 +374,17 @@ scala.Int
             
             
             
-            
           </div>
           
-    </li><li visbl="prt" name="scala.AnyRef#finalize">
+    </li><li visbl="prt" data-isabs="false" name="scala.AnyRef#finalize">
+      <a id="finalize():Unit"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">finalize</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">finalize</span>
+        
+        <span class="params">()</span>
+        <span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
       </h4>
       
@@ -328,14 +399,17 @@ there are no more references to the object.</p><p>The details of when and if the
             
             
             
-            
           </div>
           
-    </li><li visbl="pub" name="scala.AnyRef#getClass">
+    </li><li visbl="pub" data-isabs="false" name="scala.AnyRef#getClass">
+      <a id="getClass():java.lang.Class[_]"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">getClass</span><span class="params">()</span><span class="result">: java.lang.Class[_]</span>
+        <span class="name">getClass</span>
+        
+        <span class="params">()</span>
+        <span class="result">: java.lang.Class[_]</span>
       </span>
       </h4>
       
@@ -349,14 +423,17 @@ there are no more references to the object.</p><p>The details of when and if the
             
             
             
-            
           </div>
           
-    </li><li visbl="pub" name="scala.rdf.URIRef#hashCode">
+    </li><li visbl="pub" data-isabs="false" name="scala.rdf.URIRef#hashCode">
+      <a id="hashCode():Int"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+        <span class="name">hashCode</span>
+        
+        <span class="params">()</span>
+        <span class="result">: <span class="extype" name="scala.Int">Int</span></span>
       </span>
       </h4>
       
@@ -372,14 +449,17 @@ to verify that the behavior is consistent with the <code>equals</code> method.
             
             
             
-            
           </div>
           
-    </li><li visbl="pub" name="scala.Any#isInstanceOf">
+    </li><li visbl="pub" data-isabs="false" name="scala.Any#isInstanceOf">
+      <a id="isInstanceOf[T0]:Boolean"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">isInstanceOf</span>
+        <span class="tparams">[<span name="T0">T0</span>]</span>
+        
+        <span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
       </h4>
       
@@ -395,14 +475,17 @@ possible to check whether the contents of the list are of the requested typed.
             
             
             
-            
           </div>
           
-    </li><li visbl="pub" name="scala.AnyRef#ne">
+    </li><li visbl="pub" data-isabs="false" name="scala.AnyRef#ne">
+      <a id="ne(AnyRef):Boolean"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: AnyRef</span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">ne</span>
+        
+        <span class="params">(<span name="arg0">arg0: AnyRef</span>)</span>
+        <span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
       </h4>
       
@@ -416,14 +499,17 @@ possible to check whether the contents of the list are of the requested typed.
             
             
             
-            
           </div>
           
-    </li><li visbl="pub" name="scala.AnyRef#notify">
+    </li><li visbl="pub" data-isabs="false" name="scala.AnyRef#notify">
+      <a id="notify():Unit"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">notify</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">notify</span>
+        
+        <span class="params">()</span>
+        <span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
       </h4>
       
@@ -436,14 +522,17 @@ possible to check whether the contents of the list are of the requested typed.
             
             
             
-            
           </div>
           
-    </li><li visbl="pub" name="scala.AnyRef#notifyAll">
+    </li><li visbl="pub" data-isabs="false" name="scala.AnyRef#notifyAll">
+      <a id="notifyAll():Unit"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">notifyAll</span>
+        
+        <span class="params">()</span>
+        <span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
       </h4>
       
@@ -456,14 +545,17 @@ possible to check whether the contents of the list are of the requested typed.
             
             
             
-            
           </div>
           
-    </li><li visbl="pub" name="scala.rdf.URIRef#productArity">
+    </li><li visbl="pub" data-isabs="false" name="scala.rdf.URIRef#productArity">
+      <a id="productArity:Int"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">productArity</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+        <span class="name">productArity</span>
+        
+        
+        <span class="result">: <span class="extype" name="scala.Int">Int</span></span>
       </span>
       </h4>
       
@@ -472,11 +564,15 @@ possible to check whether the contents of the list are of the requested typed.
           definition classes: <a href="" class="extype" name="scala.rdf.URIRef">URIRef</a> → Product
         </div></div>
           
-    </li><li visbl="pub" name="scala.rdf.URIRef#productElement">
+    </li><li visbl="pub" data-isabs="false" name="scala.rdf.URIRef#productElement">
+      <a id="productElement(Int):Any"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">productElement</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="scala.Any">Any</span></span>
+        <span class="name">productElement</span>
+        
+        <span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Int">Int</span></span>)</span>
+        <span class="result">: <span class="extype" name="scala.Any">Any</span></span>
       </span>
       </h4>
       
@@ -485,11 +581,15 @@ possible to check whether the contents of the list are of the requested typed.
           definition classes: <a href="" class="extype" name="scala.rdf.URIRef">URIRef</a> → Product
         </div></div>
           
-    </li><li visbl="pub" name="scala.Product#productElements">
+    </li><li visbl="pub" data-isabs="false" name="scala.Product#productElements">
+      <a id="productElements:Iterator[Any]"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name deprecated">productElements</span><span class="result">: <span class="extype" name="scala.collection.Iterator">Iterator</span>[<span class="extype" name="scala.Any">Any</span>]</span>
+        <span class="name deprecated">productElements</span>
+        
+        
+        <span class="result">: Iterator[<span class="extype" name="scala.Any">Any</span>]</span>
       </span>
       </h4>
       
@@ -500,11 +600,15 @@ possible to check whether the contents of the list are of the requested typed.
           <li><p>use productIterator instead</p></li>
         </ol></div></div>
           
-    </li><li visbl="pub" name="scala.Product#productIterator">
+    </li><li visbl="pub" data-isabs="false" name="scala.Product#productIterator">
+      <a id="productIterator:Iterator[Any]"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">productIterator</span><span class="result">: <span class="extype" name="scala.collection.Iterator">Iterator</span>[<span class="extype" name="scala.Any">Any</span>]</span>
+        <span class="name">productIterator</span>
+        
+        
+        <span class="result">: Iterator[<span class="extype" name="scala.Any">Any</span>]</span>
       </span>
       </h4>
       
@@ -513,11 +617,15 @@ possible to check whether the contents of the list are of the requested typed.
           definition classes: Product
         </div></div>
           
-    </li><li visbl="pub" name="scala.rdf.URIRef#productPrefix">
+    </li><li visbl="pub" data-isabs="false" name="scala.rdf.URIRef#productPrefix">
+      <a id="productPrefix:String"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">productPrefix</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+        <span class="name">productPrefix</span>
+        
+        
+        <span class="result">: <span class="extype" name="java.lang.String">String</span></span>
       </span>
       </h4>
       
@@ -526,11 +634,15 @@ possible to check whether the contents of the list are of the requested typed.
           definition classes: <a href="" class="extype" name="scala.rdf.URIRef">URIRef</a> → Product
         </div></div>
           
-    </li><li visbl="pub" name="scala.AnyRef#synchronized">
+    </li><li visbl="pub" data-isabs="false" name="scala.AnyRef#synchronized">
+      <a id="synchronized[T0](T0):T0"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">synchronized</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="params">(<span name="arg0">arg0: T0</span>)</span><span class="result">: T0</span>
+        <span class="name">synchronized</span>
+        <span class="tparams">[<span name="T0">T0</span>]</span>
+        <span class="params">(<span name="arg0">arg0: T0</span>)</span>
+        <span class="result">: T0</span>
       </span>
       </h4>
       
@@ -541,11 +653,15 @@ possible to check whether the contents of the list are of the requested typed.
           definition classes: AnyRef
         </div></div>
           
-    </li><li visbl="pub" name="scala.rdf.URIRef#toString">
+    </li><li visbl="pub" data-isabs="false" name="scala.rdf.URIRef#toString">
+      <a id="toString():String"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">toString</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+        <span class="name">toString</span>
+        
+        <span class="params">()</span>
+        <span class="result">: <span class="extype" name="java.lang.String">String</span></span>
       </span>
       </h4>
       
@@ -557,32 +673,40 @@ possible to check whether the contents of the list are of the requested typed.
             
             
             
-            
           </div>
           
-    </li><li visbl="pub" name="scala.rdf.URIRef#uri">
+    </li><li visbl="pub" data-isabs="false" name="scala.rdf.URIRef#uri">
+      <a id="uri:URI"></a>
       <h4 class="signature">
       <span class="kind">val</span>
       <span class="symbol">
-        <span class="name">uri</span><span class="result">: <span class="extype" name="java.net.URI">URI</span></span>
+        <span class="name">uri</span>
+        
+        
+        <span class="result">: <span class="extype" name="java.net.URI">URI</span></span>
       </span>
       </h4>
       
-            <p class="shortcomment cmt">The unqualified URI of the resource</p>
-            <div class="fullcomment"><div class="comment cmt"><p>The unqualified URI of the resource</p></div><div class="block">
+            <p class="shortcomment cmt">The URI value of the node
+</p>
+            <div class="fullcomment"><div class="comment cmt"><p>The URI value of the node
+</p></div><div class="block">
           definition classes: <a href="" class="extype" name="scala.rdf.URIRef">URIRef</a> → <a href="NamedNode.html" class="extype" name="scala.rdf.NamedNode">NamedNode</a>
         </div>
             
             
             
-            
           </div>
           
-    </li><li visbl="pub" name="scala.AnyRef#wait">
+    </li><li visbl="pub" data-isabs="false" name="scala.AnyRef#wait">
+      <a id="wait():Unit"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">wait</span>
+        
+        <span class="params">()</span>
+        <span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
       </h4>
       
@@ -593,11 +717,15 @@ possible to check whether the contents of the list are of the requested typed.
           definition classes: AnyRef
         </div></div>
           
-    </li><li visbl="pub" name="scala.AnyRef#wait">
+    </li><li visbl="pub" data-isabs="false" name="scala.AnyRef#wait">
+      <a id="wait(Long,Int):Unit"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>, <span name="arg1">arg1: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">wait</span>
+        
+        <span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>, <span name="arg1">arg1: <span class="extype" name="scala.Int">Int</span></span>)</span>
+        <span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
       </h4>
       
@@ -608,11 +736,15 @@ possible to check whether the contents of the list are of the requested typed.
           definition classes: AnyRef
         </div></div>
           
-    </li><li visbl="pub" name="scala.AnyRef#wait">
+    </li><li visbl="pub" data-isabs="false" name="scala.AnyRef#wait">
+      <a id="wait(Long):Unit"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">wait</span>
+        
+        <span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>)</span>
+        <span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
       </h4>
       
@@ -623,11 +755,15 @@ possible to check whether the contents of the list are of the requested typed.
           definition classes: AnyRef
         </div></div>
           
-    </li><li visbl="pub" name="scala.rdf.NamedNode#~&gt;">
+    </li><li visbl="pub" data-isabs="false" name="scala.rdf.NamedNode#~&gt;">
+      <a id="~&gt;(BlankNode):PredObj"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">~&gt;</span><span class="params">(<span name="bn">bn: <a href="BlankNode.html" class="extype" name="scala.rdf.BlankNode">BlankNode</a></span>)</span><span class="result">: <a href="PredObj.html" class="extype" name="scala.rdf.PredObj">PredObj</a></span>
+        <span class="name">~&gt;</span>
+        
+        <span class="params">(<span name="bn">bn: <a href="BlankNode.html" class="extype" name="scala.rdf.BlankNode">BlankNode</a></span>)</span>
+        <span class="result">: <a href="PredObj.html" class="extype" name="scala.rdf.PredObj">PredObj</a></span>
       </span>
       </h4>
       
@@ -638,14 +774,17 @@ possible to check whether the contents of the list are of the requested typed.
             
             
             
-            
           </div>
           
-    </li><li visbl="pub" name="scala.rdf.NamedNode#~&gt;">
+    </li><li visbl="pub" data-isabs="false" name="scala.rdf.NamedNode#~&gt;">
+      <a id="~&gt;(NamedNode):SubjPred[NamedNode]"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">~&gt;</span><span class="params">(<span name="res">res: <a href="NamedNode.html" class="extype" name="scala.rdf.NamedNode">NamedNode</a></span>)</span><span class="result">: <a href="SubjPred.html" class="extype" name="scala.rdf.SubjPred">SubjPred</a>[<a href="NamedNode.html" class="extype" name="scala.rdf.NamedNode">NamedNode</a>]</span>
+        <span class="name">~&gt;</span>
+        
+        <span class="params">(<span name="res">res: <a href="NamedNode.html" class="extype" name="scala.rdf.NamedNode">NamedNode</a></span>)</span>
+        <span class="result">: <a href="SubjPred.html" class="extype" name="scala.rdf.SubjPred">SubjPred</a>[<a href="NamedNode.html" class="extype" name="scala.rdf.NamedNode">NamedNode</a>]</span>
       </span>
       </h4>
       
@@ -656,14 +795,17 @@ possible to check whether the contents of the list are of the requested typed.
             
             
             
-            
           </div>
           
-    </li><li visbl="pub" name="scala.rdf.NamedNode#~&gt;">
+    </li><li visbl="pub" data-isabs="false" name="scala.rdf.NamedNode#~&gt;">
+      <a id="~&gt;(Literal):PredObj"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">~&gt;</span><span class="params">(<span name="lit">lit: <a href="Literal.html" class="extype" name="scala.rdf.Literal">Literal</a></span>)</span><span class="result">: <a href="PredObj.html" class="extype" name="scala.rdf.PredObj">PredObj</a></span>
+        <span class="name">~&gt;</span>
+        
+        <span class="params">(<span name="lit">lit: <a href="Literal.html" class="extype" name="scala.rdf.Literal">Literal</a></span>)</span>
+        <span class="result">: <a href="PredObj.html" class="extype" name="scala.rdf.PredObj">PredObj</a></span>
       </span>
       </h4>
       
@@ -674,14 +816,17 @@ possible to check whether the contents of the list are of the requested typed.
             
             
             
-            
           </div>
           
-    </li><li visbl="pub" name="scala.rdf.Resource#~&gt;">
+    </li><li visbl="pub" data-isabs="false" name="scala.rdf.Resource#~&gt;">
+      <a id="~&gt;(RDFPair[NamedNode, Value]*):List[Statement]"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">~&gt;</span><span class="params">(<span name="predObjs">predObjs: <a href="RDFPair.html" class="extype" name="scala.rdf.RDFPair">RDFPair</a>[<a href="NamedNode.html" class="extype" name="scala.rdf.NamedNode">NamedNode</a>, <a href="Value.html" class="extype" name="scala.rdf.Value">Value</a>]*</span>)</span><span class="result">: <span class="extype" name="scala.collection.immutable.List">List</span>[<a href="Statement.html" class="extype" name="scala.rdf.Statement">Statement</a>]</span>
+        <span class="name">~&gt;</span>
+        
+        <span class="params">(<span name="predObjs">predObjs: <a href="RDFPair.html" class="extype" name="scala.rdf.RDFPair">RDFPair</a>[<a href="NamedNode.html" class="extype" name="scala.rdf.NamedNode">NamedNode</a>, <a href="Value.html" class="extype" name="scala.rdf.Value">Value</a>]*</span>)</span>
+        <span class="result">: List[<a href="Statement.html" class="extype" name="scala.rdf.Statement">Statement</a>]</span>
       </span>
       </h4>
       
@@ -690,11 +835,15 @@ possible to check whether the contents of the list are of the requested typed.
           definition classes: <a href="Resource.html" class="extype" name="scala.rdf.Resource">Resource</a>
         </div></div>
           
-    </li><li visbl="pub" name="scala.rdf.NamedNode#~&gt;*">
+    </li><li visbl="pub" data-isabs="false" name="scala.rdf.NamedNode#~&gt;*">
+      <a id="~&gt;*(Value*):Seq[PredObj]"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">~&gt;*</span><span class="params">(<span name="vals">vals: <a href="Value.html" class="extype" name="scala.rdf.Value">Value</a>*</span>)</span><span class="result">: <span class="extype" name="scala.collection.Seq">Seq</span>[<a href="PredObj.html" class="extype" name="scala.rdf.PredObj">PredObj</a>]</span>
+        <span class="name">~&gt;*</span>
+        
+        <span class="params">(<span name="vals">vals: <a href="Value.html" class="extype" name="scala.rdf.Value">Value</a>*</span>)</span>
+        <span class="result">: <span class="extype" name="scala.collection.Seq">Seq</span>[<a href="PredObj.html" class="extype" name="scala.rdf.PredObj">PredObj</a>]</span>
       </span>
       </h4>
       
@@ -705,7 +854,23 @@ possible to check whether the contents of the list are of the requested typed.
           
     </li></ol>
             </div>
-                
+
+        <div class="parent" name="scala.Product">
+              <h3>Inherited from <span class="extype" name="scala.Product">Product</span></h3>
+            </div><div class="parent" name="scala.Equals">
+              <h3>Inherited from <span class="extype" name="scala.Equals">Equals</span></h3>
+            </div><div class="parent" name="scala.rdf.NamedNode">
+              <h3>Inherited from <a href="NamedNode.html" class="extype" name="scala.rdf.NamedNode">NamedNode</a></h3>
+            </div><div class="parent" name="scala.rdf.Resource">
+              <h3>Inherited from <a href="Resource.html" class="extype" name="scala.rdf.Resource">Resource</a></h3>
+            </div><div class="parent" name="scala.rdf.Value">
+              <h3>Inherited from <a href="Value.html" class="extype" name="scala.rdf.Value">Value</a></h3>
+            </div><div class="parent" name="scala.AnyRef">
+              <h3>Inherited from AnyRef</h3>
+            </div><div class="parent" name="scala.Any">
+              <h3>Inherited from <span class="extype" name="scala.Any">Any</span></h3>
+            </div>
+
       </div>
       
       <div id="tooltip"></div>

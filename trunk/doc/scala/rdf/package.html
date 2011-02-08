@@ -2,16 +2,17 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html>
         <head>
-          <title>Scaladoc for scala.rdf</title>
+          <title>scala.rdf</title>
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-		      <script type="text/javascript" src="../../lib/jquery.js"></script>
           
       <link href="../../lib/template.css" rel="stylesheet" type="text/css" media="screen" />
+      <script type="text/javascript" src="../../lib/jquery.js"></script>
+      <script type="text/javascript" src="../../lib/jquery-ui.js"></script>
       <script type="text/javascript" src="../../lib/template.js"></script>
       <script type="text/javascript" src="../../lib/tools.tooltip.js"></script>
     
         </head>
-        <body class="value">
+        <body class="value" onload="windowTitle();">
 
       <p id="owner"><a href="../package.html" class="extype" name="scala">scala</a></p>
 
@@ -24,228 +25,299 @@
       <span class="kind">package</span>
       <span class="symbol">
         <span class="name">rdf</span>
+        
+        
+        
       </span>
       </h4>
       <div class="fullcomment" id="comment"></div>
-      
+
       <div id="template">
 
         <div id="mbrsel">
+          <div id="textfilter"><span class="pre"></span><span class="input"><input accesskey="/" type="text" /></span><span class="post"></span></div>
+          
           
           <div id="visbl">
-            <span class="filtertype">Visibility</span>
-            <ol><li class="public in">Public</li><li class="all out">All</li></ol>
-          </div>
+              <span class="filtertype">Visibility</span>
+              <ol><li class="public in">Public</li><li class="all out">All</li></ol>
+            </div>
+          <div id="impl">
+              <span class="filtertype">Impl.</span>
+              <ol><li class="concrete in">Concrete</li><li class="abstract in">Abstract</li></ol>
+            </div>
         </div>
+
         
-                
-        
-        <div class="members" id="types">
+
+        <div class="types members" id="types">
               <h3>Type Members</h3>
-              <ol><li visbl="pub" name="scala.rdf.AnonymousNode">
+              <ol><li visbl="pub" data-isabs="false" name="scala.rdf.AnonymousNode">
+      <a id="AnonymousNode:AnonymousNode"></a>
       <h4 class="signature"><a href="AnonymousNode.html">
       <span class="kind">class</span>
       <span class="symbol">
-        <span class="name">AnonymousNode</span><span class="result"> extends BlankNode</span>
+        <span class="name">AnonymousNode</span>
+        
+        
+        <span class="result"> extends BlankNode</span>
       </span>
       </a></h4>
       <p class="comment cmt">An anonymous blank RDF resource.</p>
-    </li><li visbl="pub" name="scala.rdf.BlankNode">
+    </li><li visbl="pub" data-isabs="false" name="scala.rdf.BlankNode">
+      <a id="BlankNode:BlankNode"></a>
       <h4 class="signature"><a href="BlankNode.html">
-      <span class="kind">class</span>
+      <span class="kind">case class</span>
       <span class="symbol">
-        <span class="name">BlankNode</span><span class="params">(<span name="id">id: String</span>)</span><span class="result"> extends Resource with Product</span>
+        <span class="name">BlankNode</span>
+        
+        <span class="params">(<span name="id">id: String</span>)</span>
+        <span class="result"> extends Resource with Product</span>
       </span>
       </a></h4>
       <p class="comment cmt">A blank RDF resource.</p>
-    </li><li visbl="pub" name="scala.rdf.LangLiteral">
+    </li><li visbl="pub" data-isabs="false" name="scala.rdf.LangLiteral">
+      <a id="LangLiteral:LangLiteral"></a>
       <h4 class="signature"><a href="LangLiteral.html">
-      <span class="kind">class</span>
+      <span class="kind">case class</span>
       <span class="symbol">
-        <span class="name">LangLiteral</span><span class="params">(<span name="value">value: String</span>, <span name="lang">lang: String</span>)</span><span class="result"> extends Literal with Product</span>
+        <span class="name">LangLiteral</span>
+        
+        <span class="params">(<span name="value">value: String</span>, <span name="lang">lang: String</span>)</span>
+        <span class="result"> extends Literal with Product</span>
       </span>
       </a></h4>
       <p class="comment cmt">A RDF literal qualified with a language tag</p>
-    </li><li visbl="pub" name="scala.rdf.Literal">
+    </li><li visbl="pub" data-isabs="true" name="scala.rdf.Literal">
+      <a id="Literal:Literal"></a>
       <h4 class="signature"><a href="Literal.html">
       <span class="kind">trait</span>
       <span class="symbol">
-        <span class="name">Literal</span><span class="result"> extends Value</span>
+        <span class="name">Literal</span>
+        
+        
+        <span class="result"> extends Value</span>
       </span>
       </a></h4>
       <p class="comment cmt">A literal RDF value
 </p>
-    </li><li visbl="pub" name="scala.rdf.NameSpace">
+    </li><li visbl="pub" data-isabs="false" name="scala.rdf.NameSpace">
+      <a id="NameSpace:NameSpace"></a>
       <h4 class="signature"><a href="NameSpace.html">
-      <span class="kind">class</span>
+      <span class="kind">case class</span>
       <span class="symbol">
-        <span class="name">NameSpace</span><span class="params">(<span name="id">id: String</span>, <span name="prefix">prefix: String</span>)</span><span class="result"> extends Product</span>
+        <span class="name">NameSpace</span>
+        
+        <span class="params">(<span name="id">id: String</span>, <span name="prefix">prefix: String</span>)</span>
+        <span class="result"> extends Product</span>
       </span>
       </a></h4>
       <p class="comment cmt">A name space for use with RDF</p>
-    </li><li visbl="pub" name="scala.rdf.NamedNode">
+    </li><li visbl="pub" data-isabs="true" name="scala.rdf.NamedNode">
+      <a id="NamedNode:NamedNode"></a>
       <h4 class="signature"><a href="NamedNode.html">
       <span class="kind">trait</span>
       <span class="symbol">
-        <span class="name">NamedNode</span><span class="result"> extends Resource</span>
+        <span class="name">NamedNode</span>
+        
+        
+        <span class="result"> extends Resource</span>
       </span>
       </a></h4>
       <p class="comment cmt">A RDF Resource with a name (URI)
 </p>
-    </li><li visbl="pub" name="scala.rdf.PredObj">
+    </li><li visbl="pub" data-isabs="false" name="scala.rdf.PredObj">
+      <a id="PredObj:PredObj"></a>
       <h4 class="signature"><a href="PredObj.html">
-      <span class="kind">class</span>
+      <span class="kind">case class</span>
       <span class="symbol">
-        <span class="name">PredObj</span><span class="params">(<span name="pred">pred: NamedNode</span>, <span name="obj">obj: Value</span>)</span><span class="result"> extends RDFPair[NamedNode, Value] with Product</span>
+        <span class="name">PredObj</span>
+        
+        <span class="params">(<span name="pred">pred: NamedNode</span>, <span name="obj">obj: Value</span>)</span>
+        <span class="result"> extends RDFPair[NamedNode, Value] with Product</span>
       </span>
       </a></h4>
       <p class="comment cmt">Any pair of RDF values.</p>
-    </li><li visbl="pub" name="scala.rdf.QName">
+    </li><li visbl="pub" data-isabs="false" name="scala.rdf.QName">
+      <a id="QName:QName"></a>
       <h4 class="signature"><a href="QName.html">
-      <span class="kind">class</span>
+      <span class="kind">case class</span>
       <span class="symbol">
-        <span class="name">QName</span><span class="params">(<span name="nameSpace">nameSpace: NameSpace</span>, <span name="suffix">suffix: String</span>)</span><span class="result"> extends NamedNode with Product</span>
+        <span class="name">QName</span>
+        
+        <span class="params">(<span name="nameSpace">nameSpace: NameSpace</span>, <span name="suffix">suffix: String</span>)</span>
+        <span class="result"> extends NamedNode with Product</span>
       </span>
       </a></h4>
       <p class="comment cmt">A URI generated from a name space</p>
-    </li><li visbl="pub" name="scala.rdf.RDFPair">
+    </li><li visbl="pub" data-isabs="true" name="scala.rdf.RDFPair">
+      <a id="RDFPair:RDFPair[T, U]"></a>
       <h4 class="signature"><a href="RDFPair.html">
       <span class="kind">trait</span>
       <span class="symbol">
-        <span class="name">RDFPair</span><span class="tparams">[<span name="T">+T &lt;: Value</span>, <span name="U">+U &lt;: Value</span>]</span><span class="result"> extends AnyRef</span>
+        <span class="name">RDFPair</span>
+        <span class="tparams">[<span name="T">+T &lt;: Value</span>, <span name="U">+U &lt;: Value</span>]</span>
+        
+        <span class="result"> extends AnyRef</span>
       </span>
       </a></h4>
       <p class="comment cmt">Any pair of RDF values.</p>
-    </li><li visbl="pub" name="scala.rdf.Resource">
+    </li><li visbl="pub" data-isabs="true" name="scala.rdf.Resource">
+      <a id="Resource:Resource"></a>
       <h4 class="signature"><a href="Resource.html">
       <span class="kind">trait</span>
       <span class="symbol">
-        <span class="name">Resource</span><span class="result"> extends Value</span>
+        <span class="name">Resource</span>
+        
+        
+        <span class="result"> extends Value</span>
       </span>
       </a></h4>
       <p class="comment cmt">A Resource (non-literal) RDF value
 </p>
-    </li><li visbl="pub" name="scala.rdf.SimpleLiteral">
+    </li><li visbl="pub" data-isabs="false" name="scala.rdf.SimpleLiteral">
+      <a id="SimpleLiteral:SimpleLiteral"></a>
       <h4 class="signature"><a href="SimpleLiteral.html">
-      <span class="kind">class</span>
+      <span class="kind">case class</span>
       <span class="symbol">
-        <span class="name">SimpleLiteral</span><span class="params">(<span name="value">value: String</span>)</span><span class="result"> extends Literal with Product</span>
+        <span class="name">SimpleLiteral</span>
+        
+        <span class="params">(<span name="value">value: String</span>)</span>
+        <span class="result"> extends Literal with Product</span>
       </span>
       </a></h4>
       <p class="comment cmt">A plain RDF literal</p>
-    </li><li visbl="pub" name="scala.rdf.Statement">
+    </li><li visbl="pub" data-isabs="false" name="scala.rdf.Statement">
+      <a id="Statement:Statement"></a>
       <h4 class="signature"><a href="Statement.html">
-      <span class="kind">class</span>
+      <span class="kind">case class</span>
       <span class="symbol">
-        <span class="name">Statement</span><span class="params">(<span name="subj">subj: Resource</span>, <span name="pred">pred: NamedNode</span>, <span name="obj">obj: Value</span>)</span><span class="result"> extends Product</span>
+        <span class="name">Statement</span>
+        
+        <span class="params">(<span name="subj">subj: Resource</span>, <span name="pred">pred: NamedNode</span>, <span name="obj">obj: Value</span>)</span>
+        <span class="result"> extends Product</span>
       </span>
       </a></h4>
       <p class="comment cmt">An RDF statement (triple).</p>
-    </li><li visbl="pub" name="scala.rdf.SubjPred">
+    </li><li visbl="pub" data-isabs="false" name="scala.rdf.SubjPred">
+      <a id="SubjPred:SubjPred[T]"></a>
       <h4 class="signature"><a href="SubjPred.html">
-      <span class="kind">class</span>
+      <span class="kind">case class</span>
       <span class="symbol">
-        <span class="name">SubjPred</span><span class="tparams">[<span name="T">+T &lt;: Resource</span>]</span><span class="params">(<span name="subj">subj: T</span>, <span name="pred">pred: NamedNode</span>)</span><span class="result"> extends RDFPair[T, NamedNode] with Product</span>
+        <span class="name">SubjPred</span>
+        <span class="tparams">[<span name="T">+T &lt;: Resource</span>]</span>
+        <span class="params">(<span name="subj">subj: T</span>, <span name="pred">pred: NamedNode</span>)</span>
+        <span class="result"> extends RDFPair[T, NamedNode] with Product</span>
       </span>
       </a></h4>
       <p class="comment cmt">Any pair of RDF values.</p>
-    </li><li visbl="pub" name="scala.rdf.TypedLiteral">
+    </li><li visbl="pub" data-isabs="false" name="scala.rdf.TypedLiteral">
+      <a id="TypedLiteral:TypedLiteral"></a>
       <h4 class="signature"><a href="TypedLiteral.html">
-      <span class="kind">class</span>
+      <span class="kind">case class</span>
       <span class="symbol">
-        <span class="name">TypedLiteral</span><span class="params">(<span name="value">value: String</span>, <span name="typ">typ: NamedNode</span>)</span><span class="result"> extends Literal with Product</span>
+        <span class="name">TypedLiteral</span>
+        
+        <span class="params">(<span name="value">value: String</span>, <span name="typ">typ: NamedNode</span>)</span>
+        <span class="result"> extends Literal with Product</span>
       </span>
       </a></h4>
       <p class="comment cmt">A RDF literal with a type annotation</p>
-    </li><li visbl="pub" name="scala.rdf.URIRef">
+    </li><li visbl="pub" data-isabs="false" name="scala.rdf.URIRef">
+      <a id="URIRef:URIRef"></a>
       <h4 class="signature"><a href="URIRef.html">
-      <span class="kind">class</span>
+      <span class="kind">case class</span>
       <span class="symbol">
-        <span class="name">URIRef</span><span class="params">(<span name="uri">uri: URI</span>)</span><span class="result"> extends NamedNode with Product</span>
+        <span class="name">URIRef</span>
+        
+        <span class="params">(<span name="uri">uri: URI</span>)</span>
+        <span class="result"> extends NamedNode with Product</span>
       </span>
       </a></h4>
       <p class="comment cmt">A single URI name</p>
-    </li><li visbl="pub" name="scala.rdf.Value">
+    </li><li visbl="pub" data-isabs="true" name="scala.rdf.Value">
+      <a id="Value:Value"></a>
       <h4 class="signature"><a href="Value.html">
       <span class="kind">trait</span>
       <span class="symbol">
-        <span class="name">Value</span><span class="result"> extends AnyRef</span>
+        <span class="name">Value</span>
+        
+        
+        <span class="result"> extends AnyRef</span>
       </span>
       </a></h4>
       <p class="comment cmt">Any RDF value
 </p>
     </li></ol>
             </div>
-        
-        <div class="members" id="values">
+
+        <div class="values members" id="values">
               <h3>Value Members</h3>
-              <ol><li visbl="pub" name="scala.rdf.RDF">
+              <ol><li visbl="pub" data-isabs="false" name="scala.rdf.RDF">
+      <a id="RDF:RDF"></a>
       <h4 class="signature"><a href="RDF$.html">
       <span class="kind">object</span>
       <span class="symbol">
-        <span class="name">RDF</span><span class="result"> extends NameSpace</span>
+        <span class="name">RDF</span>
+        
+        
+        <span class="result"> extends NameSpace</span>
       </span>
       </a></h4>
       
-    </li><li visbl="pub" name="scala.rdf.RDFS">
+    </li><li visbl="pub" data-isabs="false" name="scala.rdf.RDFS">
+      <a id="RDFS:RDFS"></a>
       <h4 class="signature"><a href="RDFS$.html">
       <span class="kind">object</span>
       <span class="symbol">
-        <span class="name">RDFS</span><span class="result"> extends NameSpace</span>
+        <span class="name">RDFS</span>
+        
+        
+        <span class="result"> extends NameSpace</span>
       </span>
       </a></h4>
       <p class="comment cmt">The Resource Description Framework Schema name space</p>
-    </li><li visbl="pub" name="scala.rdf.XSD">
+    </li><li visbl="pub" data-isabs="false" name="scala.rdf.XSD">
+      <a id="XSD:XSD"></a>
       <h4 class="signature"><a href="XSD$.html">
       <span class="kind">object</span>
       <span class="symbol">
-        <span class="name">XSD</span><span class="result"> extends NameSpace</span>
+        <span class="name">XSD</span>
+        
+        
+        <span class="result"> extends NameSpace</span>
       </span>
       </a></h4>
       <p class="comment cmt">The XML Schema Description name space.</p>
-    </li><li visbl="pub" name="scala.rdf.ntriples">
-      <h4 class="signature"><a href="ntriples/package.html">
-      <span class="kind">package</span>
-      <span class="symbol">
-        <span class="name">ntriples</span>
-      </span>
-      </a></h4>
-      
-    </li><li visbl="pub" name="scala.rdf.sparql">
-      <h4 class="signature"><a href="sparql/package.html">
-      <span class="kind">package</span>
-      <span class="symbol">
-        <span class="name">sparql</span>
-      </span>
-      </a></h4>
-      
-    </li><li visbl="pub" name="scala.rdf.sugar">
+    </li><li visbl="pub" data-isabs="false" name="scala.rdf.sugar">
+      <a id="sugar:sugar"></a>
       <h4 class="signature"><a href="sugar$.html">
       <span class="kind">object</span>
       <span class="symbol">
-        <span class="name">sugar</span><span class="result"> extends AnyRef</span>
+        <span class="name">sugar</span>
+        
+        
+        <span class="result"> extends AnyRef</span>
       </span>
       </a></h4>
       <p class="comment cmt">The Resource Description Framework name space.</p>
-    </li><li visbl="pub" name="scala.rdf.turtle">
+    </li><li visbl="pub" data-isabs="false" name="scala.rdf.turtle">
+      <a id="turtle:turtle"></a>
       <h4 class="signature"><a href="turtle/package.html">
       <span class="kind">package</span>
       <span class="symbol">
         <span class="name">turtle</span>
-      </span>
-      </a></h4>
-      
-    </li><li visbl="pub" name="scala.rdf.xml">
-      <h4 class="signature"><a href="xml/package.html">
-      <span class="kind">package</span>
-      <span class="symbol">
-        <span class="name">xml</span>
+        
+        
+        
       </span>
       </a></h4>
       
     </li></ol>
             </div>
-                
+
+        
+
       </div>
       
       <div id="tooltip"></div>
