@@ -35,7 +35,7 @@
     
     <target name="compile" depends="init">
     	<javac srcdir="${src.dir}" destdir="${classes.dir}" classpathref="build.classpath"/>
-        <fsc srcdir="${src.dir}" destdir="${classes.dir}" classpathref="build.classpath"
+        <scalac srcdir="${src.dir}" destdir="${classes.dir}" classpathref="build.classpath"
         unchecked="on" deprecation="on"/>
     </target>
 
