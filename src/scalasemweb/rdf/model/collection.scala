@@ -123,7 +123,7 @@ private class RDFNil(val triples : TripleSet = TripleSet.empty) extends RDFList 
 private class RDFListNode(_node : Resource, val triples : TripleSet, exact : Boolean) extends RDFList {
   private lazy val _head = triples.get(Some(node),Some(RDF.first),None) match {
     case TripleSet(_ %> _ %> first) => first
-    case _ => throw new RDFCollectionException("No or more than one first node")
+    case _ => throw new RDFCollectionException("Not an RDF list: No or more than one first node")
   }
   override def head = _head
   private lazy val _tail = triples.get(Some(node),Some(RDF.rest),None) match {

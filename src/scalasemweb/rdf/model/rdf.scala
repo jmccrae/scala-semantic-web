@@ -275,7 +275,7 @@ private class StdTripleSet(statements : Set[Triple]) extends TripleSet {
 					case Some(pred) => {
 						obj match {
 							case Some(ob) => {
-								statements exists { case Triple(s,p,o) => s == subj && p == pred && o == obj }
+								statements contains Triple(subj,pred,ob)
 							}
 							case None => {
 								statements exists { case Triple(s,p,o) => s == subj && p == pred }
