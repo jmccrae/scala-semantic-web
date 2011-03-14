@@ -32,7 +32,12 @@ object RDFXML extends RDFWriter with RDFParser {
     try {
       convert(XML.loadString(doc))
     } catch {
-      case x : SAXParseException => throw new RDFXMLFormatException("Not valid XML", x)
+      case x : SAXParseException => {
+        if((doc startsWith "/") || (doc startsWith ".")) {
+          System.err.println("Suspected file name passed as string, please wrap with java.io.FileReader")
+        }
+        throw new RDFXMLFormatException("Not valid XML", x)
+      }
     }
   }
   @throws(classOf[RDFXMLFormatException])
