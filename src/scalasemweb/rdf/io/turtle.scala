@@ -255,7 +255,12 @@ object TurtleParser {
       val parser = new Parser
       parser.parseAll(parser.turtleDoc, doc) match {
         case parser.Success(p : List[_], _) => TripleSet fromSet (deparse(p).toSet)
-        case parser.Failure(msg, in) => throw new RDFTurtleParseException(msg + " @ " + getNextN(20,in))
+        case parser.Failure(msg, in) => {
+          if((doc startsWith "/") || (doc startsWith ".")) {
+            System.err.println("Suspected file name passed as string, please wrap with java.io.FileReader")
+          }
+          throw new RDFTurtleParseException(msg + " @ " + getNextN(20,in))
+        }
         case _ => throw new RDFTurtleParseException("Unexpected parse result")
       }
     }    
