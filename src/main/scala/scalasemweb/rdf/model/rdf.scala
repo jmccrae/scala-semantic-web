@@ -266,6 +266,8 @@ object TripleSet {
 private class StdTripleSet(statements : Set[Triple]) extends TripleSet {
 	def -(statement : Triple) = new StdTripleSet(statements - statement)
 	def +(statement : Triple) = new StdTripleSet(statements + statement) 
+	def ++(triples : TripleSet) = if(triples eq this) { this } else { super.++(triples) }
+	def --(triples : TripleSet) = if(triples eq this) { this } else { super.++(triples) }
 	def contains(statement : Triple) = statements.contains(statement)
 	def iterator = statements.iterator
 	def has(subject : Option[Resource], predicate : Option[NamedNode], obj : Option[Value]) : Boolean = {
