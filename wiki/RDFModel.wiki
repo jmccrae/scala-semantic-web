@@ -1,5 +1,7 @@
 =Scala Semantic Web RDF Model=
 
+#summary The basic RDF model used by scala-semantic-web
+
 This briefly describes how to work with the Scala Semantic Web library's RDF modeling.
 
 ==Working with RDF values==
