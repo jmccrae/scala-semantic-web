@@ -1,0 +1,359 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html>
+        <head>
+          <title>Scaladoc for scalasemweb.rdf.model</title>
+          <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+		      <script type="text/javascript" src="../../../lib/jquery.js"></script>
+          
+      <link href="../../../lib/template.css" rel="stylesheet" type="text/css" media="screen" />
+      <script type="text/javascript" src="../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../lib/tools.tooltip.js"></script>
+    
+        </head>
+        <body class="value">
+
+      <p id="owner"><a href="../../package.html" class="extype" name="scalasemweb">scalasemweb</a>.<a href="../package.html" class="extype" name="scalasemweb.rdf">rdf</a></p>
+
+      <div id="definition">
+        <img src="../../../lib/package_big.png" />
+        <h1>model</h1>
+      </div>
+
+      <h4 class="signature" id="signature">
+      <span class="kind">package</span>
+      <span class="symbol">
+        <span class="name">model</span>
+      </span>
+      </h4>
+      <div class="fullcomment" id="comment"></div>
+      
+      <div id="template">
+
+        <div id="mbrsel">
+          
+          <div id="visbl">
+            <span class="filtertype">Visibility</span>
+            <ol><li class="public in">Public</li><li class="all out">All</li></ol>
+          </div>
+        </div>
+        
+                
+        
+        <div class="members" id="types">
+              <h3>Type Members</h3>
+              <ol><li visbl="pub" name="scalasemweb.rdf.model.%&gt;">
+      <h4 class="signature"><a href="$percent$greater.html">
+      <span class="kind">class</span>
+      <span class="symbol">
+        <span class="name">%&gt;</span><span class="tparams">[<span name="Subj">+Subj &lt;: Resource</span>, <span name="Obj">+Obj &lt;: NamedNode</span>]</span><span class="result"> extends RDFPair[Subj, Obj]</span>
+      </span>
+      </a></h4>
+      <p class="comment cmt">Used to create objects and provide case matching
+</p>
+    </li><li visbl="pub" name="scalasemweb.rdf.model.BlankNode">
+      <h4 class="signature"><a href="BlankNode.html">
+      <span class="kind">class</span>
+      <span class="symbol">
+        <span class="name">BlankNode</span><span class="params">(<span name="id">id: String</span>)</span><span class="result"> extends Resource with Product</span>
+      </span>
+      </a></h4>
+      <p class="comment cmt">A blank RDF resource.</p>
+    </li><li visbl="pub" name="scalasemweb.rdf.model.LangLiteral">
+      <h4 class="signature"><a href="LangLiteral.html">
+      <span class="kind">class</span>
+      <span class="symbol">
+        <span class="name">LangLiteral</span><span class="params">(<span name="value">value: String</span>, <span name="lang">lang: String</span>)</span><span class="result"> extends Literal with Product</span>
+      </span>
+      </a></h4>
+      <p class="comment cmt">A RDF literal qualified with a language tag</p>
+    </li><li visbl="pub" name="scalasemweb.rdf.model.Literal">
+      <h4 class="signature"><a href="Literal.html">
+      <span class="kind">trait</span>
+      <span class="symbol">
+        <span class="name">Literal</span><span class="result"> extends Value</span>
+      </span>
+      </a></h4>
+      <p class="comment cmt">A literal RDF value
+</p>
+    </li><li visbl="pub" name="scalasemweb.rdf.model.NameSpace">
+      <h4 class="signature"><a href="NameSpace.html">
+      <span class="kind">class</span>
+      <span class="symbol">
+        <span class="name">NameSpace</span><span class="params">(<span name="id">id: String</span>, <span name="prefix">prefix: String</span>)</span><span class="result"> extends Product</span>
+      </span>
+      </a></h4>
+      <p class="comment cmt">A name space for use with RDF</p>
+    </li><li visbl="pub" name="scalasemweb.rdf.model.NamedNode">
+      <h4 class="signature"><a href="NamedNode.html">
+      <span class="kind">trait</span>
+      <span class="symbol">
+        <span class="name">NamedNode</span><span class="result"> extends Resource</span>
+      </span>
+      </a></h4>
+      <p class="comment cmt">A RDF Resource with a name (URI)
+</p>
+    </li><li visbl="pub" name="scalasemweb.rdf.model.QName">
+      <h4 class="signature"><a href="QName.html">
+      <span class="kind">class</span>
+      <span class="symbol">
+        <span class="name">QName</span><span class="params">(<span name="nameSpace">nameSpace: NameSpace</span>, <span name="suffix">suffix: String</span>)</span><span class="result"> extends NamedNode with Product</span>
+      </span>
+      </a></h4>
+      <p class="comment cmt">A URI generated from a name space</p>
+    </li><li visbl="pub" name="scalasemweb.rdf.model.RDFPair">
+      <h4 class="signature"><a href="RDFPair.html">
+      <span class="kind">trait</span>
+      <span class="symbol">
+        <span class="name">RDFPair</span><span class="tparams">[<span name="T">+T &lt;: Resource</span>, <span name="U">+U &lt;: Value</span>]</span><span class="result"> extends AnyRef</span>
+      </span>
+      </a></h4>
+      <p class="comment cmt">A pair of RDF values.</p>
+    </li><li visbl="pub" name="scalasemweb.rdf.model.Resource">
+      <h4 class="signature"><a href="Resource.html">
+      <span class="kind">trait</span>
+      <span class="symbol">
+        <span class="name">Resource</span><span class="result"> extends Value</span>
+      </span>
+      </a></h4>
+      <p class="comment cmt">A Resource (non-literal) RDF value
+</p>
+    </li><li visbl="pub" name="scalasemweb.rdf.model.SimpleLiteral">
+      <h4 class="signature"><a href="SimpleLiteral.html">
+      <span class="kind">class</span>
+      <span class="symbol">
+        <span class="name">SimpleLiteral</span><span class="params">(<span name="value">value: String</span>)</span><span class="result"> extends Literal with Product</span>
+      </span>
+      </a></h4>
+      <p class="comment cmt">A plain RDF literal</p>
+    </li><li visbl="pub" name="scalasemweb.rdf.model.Triple">
+      <h4 class="signature"><a href="Triple.html">
+      <span class="kind">class</span>
+      <span class="symbol">
+        <span class="name">Triple</span><span class="result"> extends AnyRef</span>
+      </span>
+      </a></h4>
+      <p class="comment cmt">An RDF triple.</p>
+    </li><li visbl="pub" name="scalasemweb.rdf.model.TripleSet">
+      <h4 class="signature"><a href="TripleSet.html">
+      <span class="kind">trait</span>
+      <span class="symbol">
+        <span class="name">TripleSet</span><span class="result"> extends Set[Triple] with SetLike[Triple, TripleSet]</span>
+      </span>
+      </a></h4>
+      <p class="comment cmt">A set of triples
+</p>
+    </li><li visbl="pub" name="scalasemweb.rdf.model.TypedLiteral">
+      <h4 class="signature"><a href="TypedLiteral.html">
+      <span class="kind">class</span>
+      <span class="symbol">
+        <span class="name">TypedLiteral</span><span class="params">(<span name="value">value: String</span>, <span name="typ">typ: NamedNode</span>)</span><span class="result"> extends Literal with Product</span>
+      </span>
+      </a></h4>
+      <p class="comment cmt">A RDF literal with a type annotation</p>
+    </li><li visbl="pub" name="scalasemweb.rdf.model.URIRef">
+      <h4 class="signature"><a href="URIRef.html">
+      <span class="kind">class</span>
+      <span class="symbol">
+        <span class="name">URIRef</span><span class="params">(<span name="uri">uri: URI</span>)</span><span class="result"> extends NamedNode with Product</span>
+      </span>
+      </a></h4>
+      <p class="comment cmt">A single URI name</p>
+    </li><li visbl="pub" name="scalasemweb.rdf.model.Value">
+      <h4 class="signature"><a href="Value.html">
+      <span class="kind">trait</span>
+      <span class="symbol">
+        <span class="name">Value</span><span class="result"> extends AnyRef</span>
+      </span>
+      </a></h4>
+      <p class="comment cmt">Any RDF value
+</p>
+    </li><li visbl="pub" name="scalasemweb.rdf.model.View">
+      <h4 class="signature"><a href="View.html">
+      <span class="kind">trait</span>
+      <span class="symbol">
+        <span class="name">View</span><span class="result"> extends AnyRef</span>
+      </span>
+      </a></h4>
+      <p class="comment cmt">A view is a semantic focus on a set of triples.</p>
+    </li></ol>
+            </div>
+        
+        <div class="members" id="values">
+              <h3>Value Members</h3>
+              <ol><li visbl="pub" name="scalasemweb.rdf.model.%&gt;">
+      <h4 class="signature"><a href="$percent$greater$.html">
+      <span class="kind">object</span>
+      <span class="symbol">
+        <span class="name">%&gt;</span><span class="result"> extends AnyRef</span>
+      </span>
+      </a></h4>
+      
+    </li><li visbl="pub" name="_root_#AnonymousNode">
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">AnonymousNode</span><span class="params">()</span><span class="result">: <a href="BlankNode.html" class="extype" name="scalasemweb.rdf.model.BlankNode">BlankNode</a></span>
+      </span>
+      </h4>
+      
+            <p class="shortcomment cmt">An anonymous blank RDF resource.</p>
+            <div class="fullcomment"><div class="comment cmt"><p>An anonymous blank RDF resource.
+</p></div><div class="block">
+          definition classes: <a href="../../../package.html" class="extype" name="_root_">root</a>
+        </div>
+            
+            
+            
+            
+          </div>
+          
+    </li><li visbl="pub" name="scalasemweb.rdf.model.RDF">
+      <h4 class="signature"><a href="RDF$.html">
+      <span class="kind">object</span>
+      <span class="symbol">
+        <span class="name">RDF</span><span class="result"> extends NameSpace</span>
+      </span>
+      </a></h4>
+      <p class="comment cmt">The Resource Description Framework name space.</p>
+    </li><li visbl="pub" name="scalasemweb.rdf.model.RDFS">
+      <h4 class="signature"><a href="RDFS$.html">
+      <span class="kind">object</span>
+      <span class="symbol">
+        <span class="name">RDFS</span><span class="result"> extends NameSpace</span>
+      </span>
+      </a></h4>
+      <p class="comment cmt">The Resource Description Framework Schema name space</p>
+    </li><li visbl="pub" name="scalasemweb.rdf.model.Triple">
+      <h4 class="signature"><a href="Triple$.html">
+      <span class="kind">object</span>
+      <span class="symbol">
+        <span class="name">Triple</span><span class="result"> extends AnyRef</span>
+      </span>
+      </a></h4>
+      
+    </li><li visbl="pub" name="scalasemweb.rdf.model.TripleSet">
+      <h4 class="signature"><a href="TripleSet$.html">
+      <span class="kind">object</span>
+      <span class="symbol">
+        <span class="name">TripleSet</span><span class="result"> extends AnyRef</span>
+      </span>
+      </a></h4>
+      
+    </li><li visbl="pub" name="scalasemweb.rdf.model.XSD">
+      <h4 class="signature"><a href="XSD$.html">
+      <span class="kind">object</span>
+      <span class="symbol">
+        <span class="name">XSD</span><span class="result"> extends NameSpace</span>
+      </span>
+      </a></h4>
+      <p class="comment cmt">The XML Schema Description name space.</p>
+    </li><li visbl="pub" name="_root_#ref2uri">
+      <h4 class="signature">
+      <span class="kind">implicit def</span>
+      <span class="symbol">
+        <span class="name">ref2uri</span><span class="params">(<span name="ref">ref: <a href="NamedNode.html" class="extype" name="scalasemweb.rdf.model.NamedNode">NamedNode</a></span>)</span><span class="result">: <span class="extype" name="java.net.URI">URI</span></span>
+      </span>
+      </h4>
+      
+            <p class="shortcomment cmt">Convert a named node to a URI</p>
+            <div class="fullcomment"><div class="comment cmt"><p>Convert a named node to a URI</p></div><div class="block">
+          attributes: implicit 
+        </div><div class="block">
+          definition classes: <a href="../../../package.html" class="extype" name="_root_">root</a>
+        </div>
+            
+            
+            
+            
+          </div>
+          
+    </li><li visbl="pub" name="_root_#str2lit">
+      <h4 class="signature">
+      <span class="kind">implicit def</span>
+      <span class="symbol">
+        <span class="name">str2lit</span><span class="params">(<span name="str">str: <span class="extype" name="java.lang.String">String</span></span>)</span><span class="result">: <a href="SimpleLiteral.html" class="extype" name="scalasemweb.rdf.model.SimpleLiteral">SimpleLiteral</a></span>
+      </span>
+      </h4>
+      
+            <p class="shortcomment cmt">Convert a string to a plain literal</p>
+            <div class="fullcomment"><div class="comment cmt"><p>Convert a string to a plain literal</p></div><div class="block">
+          attributes: implicit 
+        </div><div class="block">
+          definition classes: <a href="../../../package.html" class="extype" name="_root_">root</a>
+        </div>
+            
+            
+            
+            
+          </div>
+          
+    </li><li visbl="pub" name="_root_#str2vb">
+      <h4 class="signature">
+      <span class="kind">implicit def</span>
+      <span class="symbol">
+        <span class="name">str2vb</span><span class="params">(<span name="str">str: <span class="extype" name="java.lang.String">String</span></span>)</span><span class="result">: AnyRef {...}</span>
+      </span>
+      </h4>
+      
+            <p class="shortcomment cmt">Convert a string to typed literal, lang literal or URI ref</p>
+            <div class="fullcomment"><div class="comment cmt"><p>Convert a string to typed literal, lang literal or URI ref</p></div><div class="block">
+          attributes: implicit 
+        </div><div class="block">
+          definition classes: <a href="../../../package.html" class="extype" name="_root_">root</a>
+        </div>
+            
+            
+            
+            
+          </div>
+          
+    </li><li visbl="pub" name="_root_#sym2qn">
+      <h4 class="signature">
+      <span class="kind">implicit def</span>
+      <span class="symbol">
+        <span class="name">sym2qn</span><span class="params">(<span name="sym">sym: <span class="extype" name="scala.Symbol">Symbol</span></span>)</span><span class="result">: <a href="NamedNode.html" class="extype" name="scalasemweb.rdf.model.NamedNode">NamedNode</a></span>
+      </span>
+      </h4>
+      
+            <p class="shortcomment cmt">Convert a symbol to a QName in the RDF base namespace</p>
+            <div class="fullcomment"><div class="comment cmt"><p>Convert a symbol to a QName in the RDF base namespace</p></div><div class="block">
+          attributes: implicit 
+        </div><div class="block">
+          definition classes: <a href="../../../package.html" class="extype" name="_root_">root</a>
+        </div>
+            
+            
+            
+            
+          </div>
+          
+    </li><li visbl="pub" name="_root_#uri2ref">
+      <h4 class="signature">
+      <span class="kind">implicit def</span>
+      <span class="symbol">
+        <span class="name">uri2ref</span><span class="params">(<span name="uri">uri: <span class="extype" name="java.net.URI">URI</span></span>)</span><span class="result">: <a href="URIRef.html" class="extype" name="scalasemweb.rdf.model.URIRef">URIRef</a></span>
+      </span>
+      </h4>
+      
+            <p class="shortcomment cmt">Convert a URI to a URIref</p>
+            <div class="fullcomment"><div class="comment cmt"><p>Convert a URI to a URIref</p></div><div class="block">
+          attributes: implicit 
+        </div><div class="block">
+          definition classes: <a href="../../../package.html" class="extype" name="_root_">root</a>
+        </div>
+            
+            
+            
+            
+          </div>
+          
+    </li></ol>
+            </div>
+                
+      </div>
+      
+      <div id="tooltip"></div>
+      
+    </body>
+      </html>
