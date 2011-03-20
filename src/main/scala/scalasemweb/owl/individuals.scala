@@ -51,7 +51,27 @@ class OWLIndividual private[owl] (val resource : Resource, val triples : TripleS
   /** Get a copy of this individual with a given fact */
   def fact(prop : OWLObjectProperty, value : OWLIndividual) =  make(resource,triples + (resource %> prop.resource %> value.resource))
   
-  /** Get all facts about this individual */
+  /** Get a copy of this individual with the given negative fact */
+  def fact_not(prop : OWLDatatypeProperty, value : Value) = {
+    val n = AnonymousNode
+    make(resource,triples +
+      (n %> RDF._type %> OWL.NegativePropertyAssertion) +
+      (n %> OWL.sourceIndividual %> resource) +
+      (n %> OWL.assertionProperty %> prop.resource) +
+      (n %> OWL.targetValue %> value))
+  }
+  
+  /** Get a copy of this individual with the given negative fact */
+  def fact_not(prop : OWLObjectProperty, value : OWLIndividual) = {
+    val n = AnonymousNode
+    make(resource,triples +
+      (n %> RDF._type %> OWL.NegativePropertyAssertion) +
+      (n %> OWL.sourceIndividual %> resource) +
+      (n %> OWL.assertionProperty %> prop.resource) +
+      (n %> OWL.targetIndividual %> value.resource))
+  }
+  
+  /** Get all (positive) facts about this individual */
   def facts : Set[Tuple2[OWLProperty[_],Any]] = {
     def foo(triple : Triple) : Option[Tuple2[OWLProperty[_],Any]] = triple match {
       case _ %> p %> (o : Resource) => try {
@@ -72,6 +92,35 @@ class OWLIndividual private[owl] (val resource : Resource, val triples : TripleS
     }
     triples.get(Some(resource),None,None) flatMap (foo _) 
   }
+  
+  /** Get all negative facts about this individual */
+  def negativeFacts : Set[Tuple2[OWLProperty[_],Any]] = {
+    def foo(triple : Triple) : Tuple2[OWLProperty[_],Any] = triple match {
+      case res %> _ %> _ => {
+        triples.get(Some(res),Some(OWL.targetIndividual),None) headOption match {
+          case Some(_ %> _ %> (o : Resource)) => {
+            val indiv = OWLIndividual(o,triples)
+            triples.get(Some(res),Some(OWL.assertionProperty),None) headOption match {
+              case Some(_ %> _ %> (n : NamedNode)) => (OWLObjectProperty(n,triples),indiv)
+              case _ => throw new OWLFormatException("Negative Property Assertion without property")
+            }
+          }
+          case _ => {
+            triples.get(Some(res),Some(OWL.targetValue),None) headOption match {
+              case Some(_ %> _ %> v) => {
+                triples.get(Some(res),Some(OWL.assertionProperty),None) headOption match {
+                  case Some(_ %> _ %> (n : NamedNode)) => (OWLDatatypeProperty(n,triples),v)
+                  case _ => throw new OWLFormatException("Negative Property Assertion without property")
+                }
+              }
+              case _ => throw new OWLFormatException("Negative Property Assertion without target")
+            }
+          }
+        }
+      }
+    }
+    triples.get(None,Some(OWL.sourceIndividual),Some(resource)) map (foo _)
+  }
       
   
   def frame = triples get(Some(resource),None,None)
@@ -83,7 +132,7 @@ class OWLIndividual private[owl] (val resource : Resource, val triples : TripleS
   
   override def hashCode = resource.hashCode + 6
     
-  override def toString = "OWLAnnotationProperty("+resource+")"
+  override def toString = "OWLIndividual("+resource+")"
   
   def value = resource
 }
@@ -95,7 +144,7 @@ object OWLIndividual extends OWLCompanion[OWLIndividual] {
       case _ %> _ %> OWL.Thing => Some(new OWLIndividual(resource,triples))
       case _ %> _ %> OWL.NamedIndividual => Some(new OWLIndividual(resource,triples))
       case _ %> _ %> (x : Resource) => try {
-        OWLClass(resource,triples)
+        OWLClass(x,triples)
         Some(new OWLIndividual(resource,triples))
       } catch {
         case x : OWLNoSuchEntityException => None
