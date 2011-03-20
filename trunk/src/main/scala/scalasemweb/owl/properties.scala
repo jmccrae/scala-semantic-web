@@ -1,6 +1,7 @@
 package scalasemweb.owl
 
 import scala.collection._
+import scalasemweb.owl.restrictions._
 import scalasemweb.rdf.model._
 import scalasemweb.rdf.collection._
 
@@ -189,6 +190,38 @@ class OWLObjectProperty (val resource : NamedNode, val triples : TripleSet) exte
     case _ => None
   } 
   
+  ////////////////
+  // Restrictions
+  
+  /** Create an all values from restriction class on this property */
+  def only(clazz : OWLClass) = OWLObjectAllValuesFrom(this,clazz)
+  
+  /** Create a some values from restriction class on this property */
+  def some(clazz : OWLClass) = OWLObjectSomeValuesFrom(this,clazz)
+  
+  /** Create a has value restriction class on this property */
+  def value(indiv : OWLIndividual) = OWLObjectHasValue(this,indiv)
+  
+  /** Create an exact cardinality restriction class on this property */
+  def exact(n : Int) = OWLObjectExactCardinality(this,n)
+  
+  /** Create a qualified exact cardinality restriction class on this property */
+  def exact(n : Int, clazz : OWLClass) = OWLObjectQualifiedExactCardinality(this,n,clazz)
+  
+  /** Create a minimum cardinality restriction class on this property */
+  def min(n : Int) = OWLObjectMinCardinality(this,n)
+  
+  /** Create a qualified minimum cardinality restriction class on this property */
+  def min(n : Int, clazz : OWLClass) = OWLObjectQualifiedMinCardinality(this,n,clazz)
+  
+  /** Create a maximum cardinality restriction class on this property */
+  def max(n : Int) = OWLObjectMaxCardinality(this,n)
+  
+  /** Create a qualified maximum cardinality restriction class on this property */
+  def max(n : Int, clazz : OWLClass) = OWLObjectQualifiedMaxCardinality(this,n,clazz)
+  
+  // END
+  
   private lazy val _frame = (triples get(Some(resource),None,None)) ++ 
   (triples get(Some(resource),Some(OWL.propertyChainAxiom),None) flatMap { 
     case _ %> _ %> (p : Resource) => RDFList(p,triples).frame
@@ -237,10 +270,17 @@ class OWLObjectProperty (val resource : NamedNode, val triples : TripleSet) exte
 }
 
 object OWLObjectProperty extends OWLCompanion[OWLObjectProperty] {
+  val predefined = Set[Resource](OWL.topObjectProperty,OWL.bottomObjectProperty)
+  
   def apply(resource : NamedNode) = new OWLObjectProperty(resource,TripleSet(resource %> RDF._type %> OWL.ObjectProperty))
   def apply(resource : Resource,triples : TripleSet) = resource match {
-    case resource : NamedNode => new OWLObjectProperty(resource,triples)
-    case _ => throw new OWLNoSuchEntityException
+    case resource : NamedNode => if(triples.has(Some(resource),Some(RDF._type),Some(OWL.ObjectProperty)) ||
+      predefined.contains(resource)) {
+        new OWLObjectProperty(resource,triples)
+      } else {
+        throw new OWLNoSuchEntityException
+      }
+    case _ => throw new OWLFormatException
   }
   def unapply(entity : OWLEntity) : Option[Resource] = {
     if(entity.triples has(Some(entity.resource),Some(RDF._type),Some(OWL.ObjectProperty))) {
@@ -310,6 +350,38 @@ extends OWLProperty[OWLDatatype] {
   /** Get a copy of this property with the given characterstic(s) */
   def withCharacteristic(chars : OWLObjectPropertyCharacteristic*) = make(resource, triples ++
     (chars map (c => resource %> RDF._type %> c.clazz)))
+  
+  ////////////////
+  // Restrictions
+  
+  /** Create an all values from restriction class on this property */
+  def only(clazz : OWLDatatype) = OWLDataAllValuesFrom(this,clazz)
+  
+  /** Create a some values from restriction class on this property */
+  def some(clazz : OWLDatatype) = OWLDataSomeValuesFrom(this,clazz)
+  
+  /** Create a has value restriction class on this property */
+  def value(literal : Literal) = OWLDataHasValue(this,literal)
+  
+  /** Create an exact cardinality restriction class on this property */
+  def exact(n : Int) = OWLDataExactCardinality(this,n)
+  
+  /** Create a qualified exact cardinality restriction class on this property */
+  def exact(n : Int, clazz : OWLDatatype) = OWLDataQualifiedExactCardinality(this,n,clazz)
+  
+  /** Create a minimum cardinality restriction class on this property */
+  def min(n : Int) = OWLDataMinCardinality(this,n)
+  
+  /** Create a qualified minimum cardinality restriction class on this property */
+  def min(n : Int, clazz : OWLDatatype) = OWLDataQualifiedMinCardinality(this,n,clazz)
+  
+  /** Create a maximum cardinality restriction class on this property */
+  def max(n : Int) = OWLDataMaxCardinality(this,n)
+  
+  /** Create a qualified maximum cardinality restriction class on this property */
+  def max(n : Int, clazz : OWLDatatype) = OWLDataQualifiedMaxCardinality(this,n,clazz)
+  
+  // END
     
   private lazy val _frame = (triples get(Some(resource),None,None)) 
   def frame = _frame 
@@ -360,10 +432,17 @@ extends OWLProperty[OWLDatatype] {
 }
 
 object OWLDatatypeProperty extends OWLCompanion[OWLDatatypeProperty] {
+  val predefined = Set[Resource](OWL.topDataProperty,OWL.bottomDataProperty)
+  
   def apply(resource : NamedNode) = new OWLDatatypeProperty(resource,TripleSet(resource %> RDF._type %> OWL.DatatypeProperty))
   def apply(resource : Resource,triples : TripleSet) = resource match {
-    case resource : NamedNode => new OWLDatatypeProperty(resource,triples)
-    case _ => throw new OWLNoSuchEntityException
+    case resource : NamedNode => if(triples.has(Some(resource),Some(RDF._type),Some(OWL.DatatypeProperty)) ||
+      predefined.contains(resource)) {
+        new OWLDatatypeProperty(resource,triples)
+      } else {
+        throw new OWLNoSuchEntityException
+      }
+    case _ => throw new OWLFormatException
   }
   def unapply(entity : OWLEntity) : Option[Resource] = {
     if(entity.triples has(Some(entity.resource),Some(RDF._type),Some(OWL.DatatypeProperty))) {
@@ -432,9 +511,26 @@ extends OWLProperty[OWLType] {
 }
  
 object OWLAnnotationProperty extends OWLCompanion[OWLAnnotationProperty] {
+  val predefined = Set[Resource](
+    RDFS.comment,
+    RDFS.isDefinedBy,
+    RDFS.label,
+    RDFS.seeAlso,
+    OWL.deprecated,             
+    OWL.versionIRI,            
+    OWL.priorVersion,           
+    OWL.backwardCompatibleWith, 
+    OWL.incompatibleWith,
+    OWL.versionInfo)      
+  
   def apply(resource : NamedNode) = new OWLAnnotationProperty(resource,TripleSet(resource %> RDF._type %> OWL.AnnotationProperty))
   def apply(resource : Resource,triples : TripleSet) = resource match {
-    case resource : NamedNode => new OWLAnnotationProperty(resource,triples)
+    case resource : NamedNode => if(triples.has(Some(resource),Some(RDF._type),Some(OWL.AnnotationProperty)) ||
+      predefined.contains(resource)) {
+        new OWLAnnotationProperty(resource,triples)
+      } else {
+        throw new OWLNoSuchEntityException
+      }
     case _ => throw new OWLFormatException
   }
   def unapply(entity : OWLEntity) : Option[Resource] = {
@@ -443,6 +539,16 @@ object OWLAnnotationProperty extends OWLCompanion[OWLAnnotationProperty] {
     } else {
       None
     }
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Pattern matching support
+
+object some {
+  def unapply(entity : OWLEntity) : Option[Tuple2[OWLProperty[OWLType],OWLType]] = entity match {
+    case OWLObjectSomeValuesFrom(property,clazz) => Some((property,clazz))
+    case OWLDataSomeValuesFrom(property,clazz) => Some((property,clazz))
   }
 }
 
