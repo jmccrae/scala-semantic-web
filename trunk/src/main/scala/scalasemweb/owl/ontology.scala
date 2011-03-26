@@ -60,7 +60,7 @@ with SetLike[OWLEntity,OWLOntology] {
   }
   /** Get all properties in the ontology */
   def properties : Set[OWLProperty[OWLType]] = entSet flatMap {
-    case x : OWLProperty[OWLType] => Some(x)
+    case x : OWLProperty[_] => Some(x)
     case _ => None
   }
   /** Get all object properties in the ontology */
