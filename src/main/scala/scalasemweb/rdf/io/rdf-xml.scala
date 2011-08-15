@@ -141,7 +141,15 @@ object RDFXML extends RDFWriter with RDFParser {
            Nil
         }
         
-        Some(ResStats(subject.get, typeDef :::
+        val triples : List[Triple] = if(subject == None) {
+          Nil
+        } else {
+          (for(predObj <- predObjs) yield {
+            Triple(subject.get,predObj._1,predObj._2)  
+          }).toList
+        }
+        
+        Some(ResStats(subject.get, typeDef ::: triples :::
           (node.child flatMap { childNode => propertyElt(childNode,subject.get) }).toList))
       }
     }
@@ -278,6 +286,8 @@ object RDFXML extends RDFWriter with RDFParser {
         nameSpace(ns)&suf
       } else if(value.matches("""#.*""")) {
         nameSpace("")&value.substring(1)
+      } else if(!value.matches(""".*:.*""")){
+        nameSpace("")&value
       } else {
         nsByURI.keys.find(x => value.startsWith(x)) match {
           case Some(key) => nsByURI(key)&(value.substring(key.length))
@@ -353,12 +363,12 @@ object RDFXML extends RDFWriter with RDFParser {
     }
     
     def buildScope(nameSpaces : HashSet[NameSpace]) : NamespaceBinding = {
-      if(nameSpaces.isEmpty) {
-        TopScope
-      } else {
-        //println(nameSpaces.head.id + " : " + nameSpaces.head.prefix)
-        NamespaceBinding(nameSpaces.head.id,nameSpaces.head.prefix,buildScope(nameSpaces.tail))
+      def bs2(ns2 : List[NameSpace]) : NamespaceBinding = ns2 match {
+        case NameSpace("",prefix) :: tail => NamespaceBinding(null,prefix,bs2(tail))
+        case NameSpace(id,prefix) :: tail => NamespaceBinding(id,prefix,bs2(tail))
+        case Nil => TopScope
       }
+      bs2(nameSpaces.toList)
     }
     
     def buildMap(statList : TripleSet) = {
@@ -556,7 +566,8 @@ object RDFXML extends RDFWriter with RDFParser {
               
     private[RDFXML] def toResourceName(nn : NamedNode) = {
       nn match {
-        case QName(ns,suf) => Unparsed("&"+ns.id +";"+suf)
+        case QName(ns,suf) if ns != "" => Unparsed("&"+ns.id +";"+suf)
+        case QName(ns,suf) => Unparsed(suf)
         case URIRef(uri) => Unparsed(uri.toString)
       }
     }    

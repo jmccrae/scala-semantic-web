@@ -18,9 +18,9 @@ trait Resource extends Value {
   def %>(pred:NamedNode) = new %>(this,pred)
   /** Contruct a set of triples from a list of pairs */
   def %>*(predObjs:RDFPair[NamedNode,Value]*) : TripleSet = {
-  	new StdTripleSet((predObjs map { 
-			predObj => Triple(this, predObj._1,predObj._2)
-    }).toSet)
+    new StdTripleSet((predObjs map { 
+          predObj => Triple(this, predObj._1,predObj._2)
+        }).toSet)
   }
 }
 
@@ -126,13 +126,13 @@ case class TypedLiteral(val value:String, val typ:NamedNode) extends Literal {
  * A pair of RDF values. That is a partly constructed triple 
  */
 trait RDFPair[+T <: Resource, +U <: Value] {
-	def _1 : T
-	def _2 : U
+  def _1 : T
+  def _2 : U
 }
 
 private case class PredObj(val predicate : NamedNode, val obj : Value) extends RDFPair[NamedNode,Value] {
-	def _1 = predicate
-	def _2 = obj
+  def _1 = predicate
+  def _2 = obj
 }
 
 
@@ -140,21 +140,21 @@ private case class PredObj(val predicate : NamedNode, val obj : Value) extends R
  * Used to create objects and provide case matching
  */
 class %>[+Subj <:Resource,+Obj <: NamedNode](val subject : Subj, val predicate : Obj) extends RDFPair[Subj,Obj] {
-	def %>(obj : Value) = new Triple(this,obj)
+  def %>(obj : Value) = new Triple(this,obj)
   def %>*(vals:Value*) : TripleSet = new StdTripleSet((vals map { 
   	(value:Value) => new Triple(this,value) 
-  }).toSet)
+      }).toSet)
   def _1 : Subj = subject
   def _2 : Obj = predicate
   override def hashCode = {
-  	subject.hashCode * 31 + predicate.hashCode
+    subject.hashCode * 31 + predicate.hashCode
   }
 }
 
 object %> {
-	def apply[Subj <: Resource, Obj <: NamedNode](subject : Subj, predicate : Obj) = new %>(subject,predicate)
-	def unapply(stat : Triple) : Option[Tuple2[%>[Resource,NamedNode],Value]] = Some((stat.subjPred,stat.obj))
-	def unapply(subjPred : %>[Resource,NamedNode]) : Option[Tuple2[Resource,NamedNode]] = Some((subjPred.subject, subjPred.predicate))
+  def apply[Subj <: Resource, Obj <: NamedNode](subject : Subj, predicate : Obj) = new %>(subject,predicate)
+  def unapply(stat : Triple) : Option[Tuple2[%>[Resource,NamedNode],Value]] = Some((stat.subjPred,stat.obj))
+  def unapply(subjPred : %>[Resource,NamedNode]) : Option[Tuple2[Resource,NamedNode]] = Some((subjPred.subject, subjPred.predicate))
 }
 
 
@@ -165,25 +165,25 @@ object %> {
  * @param obj The object of the triple
  */
 class Triple(val subjPred : %>[Resource,NamedNode], val obj : Value) {
-	override def toString = subj + " " + pred + " " + obj
+  override def toString = subj + " " + pred + " " + obj
   def subj = subjPred.subject
   def pred = subjPred.predicate  
   override def equals(o : Any) = {
-  	o match {
-  		case Triple(s,p,o) => subjPred.subject == s && subjPred.predicate == p && obj == o
-  		case _ => false
-  	}
+    o match {
+      case Triple(s,p,o) => subjPred.subject == s && subjPred.predicate == p && obj == o
+      case _ => false
+    }
   }
   override def hashCode = {
-  	subjPred.hashCode * 31 + obj.hashCode
+    subjPred.hashCode * 31 + obj.hashCode
   }
 }
 
 object Triple {
-	def apply(subject : Resource, predicate : NamedNode, obj : Value) = new Triple(new %>(subject,predicate),obj)
-	def unapply(statement : Triple) : Option[Tuple3[Resource,NamedNode,Value]] = { 
-		Some(statement.subj,statement.pred,statement.obj)
-	}
+  def apply(subject : Resource, predicate : NamedNode, obj : Value) = new Triple(new %>(subject,predicate),obj)
+  def unapply(statement : Triple) : Option[Tuple3[Resource,NamedNode,Value]] = { 
+    Some(statement.subj,statement.pred,statement.obj)
+  }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -197,6 +197,22 @@ object Triple {
 case class NameSpace(val id:String, val prefix:String) {
   /** Generate a new named resource with this name space and given suffix */
   def &(suffix:String) = QName(this,suffix)
+  /** Generate a new named resource with this name space. This operator is safe in that it will not generate an invalid QName */
+  def &?(suffix:String) : NamedNode = if(((id.isEmpty()) || (id matches PrefixRegexes.prefixName)) &&
+                             (suffix.isEmpty() || (suffix matches PrefixRegexes.name))) {
+    QName(this,suffix)
+  } else {
+    URIRef(URI.create(prefix+suffix))                         
+  }
+}
+
+/** Object for prefix regular expressions */
+object PrefixRegexes {
+  val prefixNameStartChar = """[A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]"""
+  val nameStartChar = """[A-Z_a-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]"""
+  val nameChar =  """[A-Z_a-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\-0-9\u00B7\u0300-\u036F\u203F-\u2040]"""
+  val prefixName = prefixNameStartChar + nameChar + "*"
+  val name = nameStartChar + nameChar + "*"
 }
 
 
@@ -216,164 +232,164 @@ trait TripleSet extends Set[Triple] with SetLike[Triple,TripleSet] {
    * @param predicate The subject or None for wildcard
    * @param obj The subject or None for wildcard
    */
-	def has(subject : Option[Resource], predicate : Option[NamedNode], obj : Option[Value]) : Boolean
-	/** Does this set contain any triples of the given form
+  def has(subject : Option[Resource], predicate : Option[NamedNode], obj : Option[Value]) : Boolean
+  /** Does this set contain any triples of the given form
    * @param subject The subject or None for wildcard
    * @param predicate The subject or None for wildcard
    * @param obj The subject or None for wildcard
    */
-	def get(subject : Option[Resource], predicate : Option[NamedNode], obj : Option[Value]) : TripleSet
-	/** Get an immutable empty statement set */
-	override def empty : TripleSet = new StdTripleSet(Set())
-	/** Incorporate a view into this statement set */
-	def ++(view : View) : TripleSet = this ++ (view.frame)
-	/** Remove a view from this statement set */
-	def --(view : View) : TripleSet = this -- (view.frame)
-	/** Get this triple set as a view on itself */
-	def toView : View = new View {
-	  def frame = TripleSet.this
-	  def triples = TripleSet.this
-	  override def isExact = true
-	}
+  def get(subject : Option[Resource], predicate : Option[NamedNode], obj : Option[Value]) : TripleSet
+  /** Get an immutable empty statement set */
+  override def empty : TripleSet = new StdTripleSet(Set())
+  /** Incorporate a view into this statement set */
+  def ++(view : View) : TripleSet = this ++ (view.frame)
+  /** Remove a view from this statement set */
+  def --(view : View) : TripleSet = this -- (view.frame)
+  /** Get this triple set as a view on itself */
+  def toView : View = new View {
+    def frame = TripleSet.this
+    def triples = TripleSet.this
+    override def isExact = true
+  }
 }
 
 object TripleSet {
-	def apply(statements : Triple*) :TripleSet = new StdTripleSet(statements.toSet)
+  def apply(statements : Triple*) :TripleSet = new StdTripleSet(statements.toSet)
 	
-	def unapplySeq(statementSet : TripleSet) : Option[Seq[Triple]] = Some(statementSet.toSeq)
+  def unapplySeq(statementSet : TripleSet) : Option[Seq[Triple]] = Some(statementSet.toList)
 	
-	/** Get a statement set from a set of statements */
-	implicit def fromSet(statements : Set[Triple]) : TripleSet = new StdTripleSet(statements)
+  /** Get a statement set from a set of statements */
+  implicit def fromSet(statements : Set[Triple]) : TripleSet = new StdTripleSet(statements)
 	
-	private lazy val _empty = new StdTripleSet(Set())
+  private lazy val _empty = new StdTripleSet(Set())
 	
-	def empty : TripleSet = _empty
+  def empty : TripleSet = _empty
 	
-	def newBuilder : Builder[Triple, TripleSet] = {
-	  new scala.collection.mutable.HashSet[Triple] mapResult {
-	    x => fromSet(x) 
-	  }
-	}
+  def newBuilder : Builder[Triple, TripleSet] = {
+    new scala.collection.mutable.HashSet[Triple] mapResult {
+      x => fromSet(x) 
+    }
+  }
 	
-	implicit def canBuildFrom : CanBuildFrom[TripleSet,Triple,TripleSet] = 
-	new CanBuildFrom[TripleSet,Triple,TripleSet] {
-	  def apply = newBuilder
-	  def apply(stats : TripleSet) = newBuilder
-	}
+  implicit def canBuildFrom : CanBuildFrom[TripleSet,Triple,TripleSet] = 
+    new CanBuildFrom[TripleSet,Triple,TripleSet] {
+      def apply = newBuilder
+      def apply(stats : TripleSet) = newBuilder
+    }
 	  
 }
 
 private class StdTripleSet(statements : Set[Triple]) extends TripleSet {
-	def -(statement : Triple) = new StdTripleSet(statements - statement)
-	def +(statement : Triple) = new StdTripleSet(statements + statement) 
-	def ++(triples : TripleSet) = if(triples eq this) { this } else { super.++(triples) }
-	def --(triples : TripleSet) = if(triples eq this) { this } else { super.++(triples) }
-	def contains(statement : Triple) = statements.contains(statement)
-	def iterator = statements.iterator
-	def has(subject : Option[Resource], predicate : Option[NamedNode], obj : Option[Value]) : Boolean = {
-		subject match {
-			case Some(subj) => {
-				predicate match {
-					case Some(pred) => {
-						obj match {
-							case Some(ob) => {
-								statements contains Triple(subj,pred,ob)
-							}
-							case None => {
-								statements exists { case Triple(s,p,o) => s == subj && p == pred }
-							}
-						}
-					}
-					case None => {
-						obj match {
-							case Some(ob) => {
-								statements exists { case Triple(s,p,o) => s == subj && o == ob }
-							}
-							case None => {
-								statements exists { case Triple(s,p,o) => s == subj }
-							}
-						}
-					}
-				}
-			}
-			case None => {
-				predicate match {
-					case Some(pred) => {
-						obj match {
-							case Some(ob) => {
-								statements exists { case Triple(s,p,o) => p == pred && o == ob }
-							}
-							case None => {
-								statements exists { case Triple(s,p,o) => p == pred }
-							}
-						}
-					}
-					case None => {
-						obj match {
-							case Some(ob) => {
-								statements exists { case Triple(s,p,o) => o == ob }
-							}
-							case None => {
-								!statements.isEmpty
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-	def get(subject : Option[Resource], predicate : Option[NamedNode], obj : Option[Value]) : StdTripleSet = {
-		new StdTripleSet (subject match {
-			case Some(subj) => {
-				predicate match {
-					case Some(pred) => {
-						obj match {
-							case Some(ob) => {
-								statements filter ( _ == Triple(subj,pred,ob) )
-							}
-							case None => {
-								statements filter { case Triple(s,p,o) => s == subj && p == pred }
-							}
-						}
-					}
-					case None => {
-						obj match {
-							case Some(ob) => {
-								statements filter { case Triple(s,p,o) => s == subj && o == ob }
-							}
-							case None => {
-								statements filter { case Triple(s,p,o) => s == subj }
-							}
-						}
-					}
-				}
-			}
-			case None => {
-				predicate match {
-					case Some(pred) => {
-						obj match {
-							case Some(ob) => {
-								statements filter { case Triple(s,p,o) => p == pred && o == ob }
-							}
-							case None => {
-								statements filter { case Triple(s,p,o) => p == pred }
-							}
-						}
-					}
-					case None => {
-						obj match {
-							case Some(ob) => {
-								statements filter { case Triple(s,p,o) => o == ob }
-							}
-							case None => {
-								statements
-							}
-						}
-					}
-				}
-			}
-		})
-	}
+  def -(statement : Triple) = new StdTripleSet(statements - statement)
+  def +(statement : Triple) = new StdTripleSet(statements + statement) 
+  def ++(triples : TripleSet) = if(triples eq this) { this } else { super.++(triples) }
+  def --(triples : TripleSet) = if(triples eq this) { this } else { super.++(triples) }
+  def contains(statement : Triple) = statements.contains(statement)
+  def iterator = statements.iterator
+  def has(subject : Option[Resource], predicate : Option[NamedNode], obj : Option[Value]) : Boolean = {
+    subject match {
+      case Some(subj) => {
+          predicate match {
+            case Some(pred) => {
+                obj match {
+                  case Some(ob) => {
+                      statements contains Triple(subj,pred,ob)
+                    }
+                  case None => {
+                      statements exists { case Triple(s,p,o) => s == subj && p == pred }
+                    }
+                }
+              }
+            case None => {
+                obj match {
+                  case Some(ob) => {
+                      statements exists { case Triple(s,p,o) => s == subj && o == ob }
+                    }
+                  case None => {
+                      statements exists { case Triple(s,p,o) => s == subj }
+                    }
+                }
+              }
+          }
+        }
+      case None => {
+          predicate match {
+            case Some(pred) => {
+                obj match {
+                  case Some(ob) => {
+                      statements exists { case Triple(s,p,o) => p == pred && o == ob }
+                    }
+                  case None => {
+                      statements exists { case Triple(s,p,o) => p == pred }
+                    }
+                }
+              }
+            case None => {
+                obj match {
+                  case Some(ob) => {
+                      statements exists { case Triple(s,p,o) => o == ob }
+                    }
+                  case None => {
+                      !statements.isEmpty
+                    }
+                }
+              }
+          }
+        }
+    }
+  }
+  def get(subject : Option[Resource], predicate : Option[NamedNode], obj : Option[Value]) : StdTripleSet = {
+    new StdTripleSet (subject match {
+        case Some(subj) => {
+            predicate match {
+              case Some(pred) => {
+                  obj match {
+                    case Some(ob) => {
+                        statements filter ( _ == Triple(subj,pred,ob) )
+                      }
+                    case None => {
+                        statements filter { case Triple(s,p,o) => s == subj && p == pred }
+                      }
+                  }
+                }
+              case None => {
+                  obj match {
+                    case Some(ob) => {
+                        statements filter { case Triple(s,p,o) => s == subj && o == ob }
+                      }
+                    case None => {
+                        statements filter { case Triple(s,p,o) => s == subj }
+                      }
+                  }
+                }
+            }
+          }
+        case None => {
+            predicate match {
+              case Some(pred) => {
+                  obj match {
+                    case Some(ob) => {
+                        statements filter { case Triple(s,p,o) => p == pred && o == ob }
+                      }
+                    case None => {
+                        statements filter { case Triple(s,p,o) => p == pred }
+                      }
+                  }
+                }
+              case None => {
+                  obj match {
+                    case Some(ob) => {
+                        statements filter { case Triple(s,p,o) => o == ob }
+                      }
+                    case None => {
+                        statements
+                      }
+                  }
+                }
+            }
+          }
+      })
+  }
 }
 
 /**
@@ -395,50 +411,50 @@ trait View {
 
 /** The XML Schema Description name space. Here are all the URIs defined for defining RDF data types */
 object XSD extends NameSpace("xsd","http://www.w3.org/2001/XMLSchema") {
-	val string = this&"string"
-	val _boolean = this&"boolean"
-	val _float = this&"float"
-	val _double = this&"double"
-	val decimal = this&"decimal"
-	val duration = this&"duration"
-	val dateTime = this&"dateTime"
-	val time = this&"time"
-	val date = this&"date"
-	val gYearMonth = this&"gYearMonth"
-	val gYear = this&"gYear"
-	val gMonthDay = this&"gMonthDay"
-	val gDay = this&"gDay"
-	val gMonth = this&"gMonth"
-	val hexBinary = this&"hexBinary"
-	val base64Binary = this&"base64Binary"
-	val anyURI = this&"anyURI"
-	val _QName = this&"QName"
-	val NOTATION = this&"NOTATION"
-	val	normalizedString = this&"normalizedString"
-	val token = this&"token"
-	val language = this&"language"
-	val IDREFS = this&"IDREFS"
-	val ENTITIES = this&"ENTITIES"
-	val NMTOKEN = this&"NMTOKEN"
-	val NMTOKENS = this&"NMTOKENS"
-	val Name = this&"Name"
-	val NCName = this&"NCName"
-	val ID = this&"ID"
-	val IDREF = this&"IDREF"
-	val ENTITY = this&"ENTITY"
-	val integer = this&"integer" 
-	val nonPositiveInteger = this&"nonPositiveInteger"
-	val negativeInteger = this&"negativeInteger"
-	val _long = this&"long"
-	val _int = this&"int"
-	val _short = this&"short"
-	val _byte = this&"byte"
-	val nonNegativeInteger = this&"nonNegativeInteger"
-	val unsignedLong = this&"unsignedLong"
-	val unsignedInt = this&"unsignedInt"
-	val unsignedShort = this&"unsignedShort"
-	val unsignedByte = this&"unsignedByte"
-	val positiveInteger = this&"positiveInteger"
+  val string = this&"string"
+  val _boolean = this&"boolean"
+  val _float = this&"float"
+  val _double = this&"double"
+  val decimal = this&"decimal"
+  val duration = this&"duration"
+  val dateTime = this&"dateTime"
+  val time = this&"time"
+  val date = this&"date"
+  val gYearMonth = this&"gYearMonth"
+  val gYear = this&"gYear"
+  val gMonthDay = this&"gMonthDay"
+  val gDay = this&"gDay"
+  val gMonth = this&"gMonth"
+  val hexBinary = this&"hexBinary"
+  val base64Binary = this&"base64Binary"
+  val anyURI = this&"anyURI"
+  val _QName = this&"QName"
+  val NOTATION = this&"NOTATION"
+  val	normalizedString = this&"normalizedString"
+  val token = this&"token"
+  val language = this&"language"
+  val IDREFS = this&"IDREFS"
+  val ENTITIES = this&"ENTITIES"
+  val NMTOKEN = this&"NMTOKEN"
+  val NMTOKENS = this&"NMTOKENS"
+  val Name = this&"Name"
+  val NCName = this&"NCName"
+  val ID = this&"ID"
+  val IDREF = this&"IDREF"
+  val ENTITY = this&"ENTITY"
+  val integer = this&"integer" 
+  val nonPositiveInteger = this&"nonPositiveInteger"
+  val negativeInteger = this&"negativeInteger"
+  val _long = this&"long"
+  val _int = this&"int"
+  val _short = this&"short"
+  val _byte = this&"byte"
+  val nonNegativeInteger = this&"nonNegativeInteger"
+  val unsignedLong = this&"unsignedLong"
+  val unsignedInt = this&"unsignedInt"
+  val unsignedShort = this&"unsignedShort"
+  val unsignedByte = this&"unsignedByte"
+  val positiveInteger = this&"positiveInteger"
 }
 
 /** The Resource Description Framework name space. All the RDF URIs are defined here, 
