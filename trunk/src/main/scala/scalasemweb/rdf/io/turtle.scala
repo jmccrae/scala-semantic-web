@@ -22,7 +22,7 @@ object Turtle extends RDFWriter with RDFParser {
  * @param postStatSpacing The number of new lines after each statement
  * @param maxObjs The maximum number of objects to insert before a line break
  */
-class TurtlePrinter(tabWidth : Int = 2, postStatSpacing : Int = 2, maxObjs : Int = 3) {
+class TurtlePrinter(tabWidth : Int = 2, postStatSpacing : Int = 2, maxObjs : Int = 3, fullURIs : Boolean = false) {
   private implicit def str2rep(str : String) = new {
     def rep(x:Int) = {
       val sb = new StringBuffer
@@ -91,13 +91,20 @@ class TurtlePrinter(tabWidth : Int = 2, postStatSpacing : Int = 2, maxObjs : Int
   }
   
   private def stringRes(res : Resource) : String = {
-    res match {
-      case qn : QName => if(!qn.suffix.matches(TurtleParser.nameStartChar + TurtleParser.nameChars + "*")) {
-        return "<" + qn.uri.toString + ">"
-      } else {
-        return qn.toString()
+    if(fullURIs) {
+      res match {
+        case nn : NamedNode => "<" + nn.uri.toString + ">"
+        case x => x.toString()
       }
-      case x => x.toString()
+    } else {
+        res match {
+          case qn : QName => if(!qn.suffix.matches(PrefixRegexes.name)) {
+          return "<" + qn.uri.toString + ">"
+        } else {
+          return qn.toString()
+        }
+        case x => x.toString()
+      }
     }
   }
   
@@ -197,7 +204,6 @@ class TurtlePrinter(tabWidth : Int = 2, postStatSpacing : Int = 2, maxObjs : Int
           var node : Resource = x
           do {
             if(!theMap.contains(node)) {
-              println(theMap)
               node == RDF.nil
             } else {
             if(!theMap(node).contains(RDF.first) ||

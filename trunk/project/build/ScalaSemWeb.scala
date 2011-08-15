@@ -9,4 +9,5 @@ class ScalaSemWeb(info : ProjectInfo) extends DefaultProject(info) with BNDPlugi
   override def bndBundleVersion = projectVersion.value.toString
   override def bndExportPackage = Seq("scalasemweb*")
   override def artifactBaseName = "scalasemweb-"+projectVersion.value
+  override def bndImportPackage = Seq("*","scala","scala.*")
 }
