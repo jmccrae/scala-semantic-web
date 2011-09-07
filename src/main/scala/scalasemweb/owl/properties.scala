@@ -1,9 +1,9 @@
 package scalasemweb.owl
 
+import scalasemweb.rdf.collection._
 import scala.collection._
 import scalasemweb.owl.restrictions._
 import scalasemweb.rdf.model._
-import scalasemweb.rdf.collection._
 
 
 /////////////////////////////////////////////////////////////////////////////////

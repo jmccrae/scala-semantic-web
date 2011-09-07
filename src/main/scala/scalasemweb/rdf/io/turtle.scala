@@ -265,7 +265,7 @@ object TurtleParser {
           if((doc startsWith "/") || (doc startsWith ".")) {
             System.err.println("Suspected file name passed as string, please wrap with java.io.FileReader")
           }
-          throw new RDFTurtleParseException(msg + " @ " + getNextN(20,in))
+          throw new RDFTurtleParseException(msg + " @ (line:" + in.pos.line + ")" + getNextN(20,in))
         }
         case _ => throw new RDFTurtleParseException("Unexpected parse result")
       }
@@ -279,7 +279,7 @@ object TurtleParser {
       val parser = new Parser
       parser.parseAll(parser.turtleDoc, in) match {
         case parser.Success(p : List[_], _) => TripleSet fromSet (deparse(p).toSet)
-        case parser.Failure(msg, in) => throw new RDFTurtleParseException(msg + " @ " + getNextN(20,in))
+        case parser.Failure(msg, in) => throw new RDFTurtleParseException(msg + " @ (line:" + in.pos.line + ")" + getNextN(20,in))
         case _ => throw new RDFTurtleParseException("Unexpected parse result")
       }
     }
@@ -421,9 +421,9 @@ object TurtleParser {
       def quotedString = longString | string
       
       //def string = "\"(([^\"])|(\\\"))+\""r
-      def string = regex(("\"" + """(([^"])|(\"))*?""" + "\"")r) ^^ { case x => x.substring(1,x.length-1) }
+      def string = regex(("\"" + """[^"]*(\\"[^"]*)*""" + "\"")r) ^^ { case x => x.substring(1,x.length-1) }
       
-      def longString = regex(("\"\"\"" + """(([^"])|(\"))*?""" + "\"\"\"")r) ^^ { case x => x.substring(3,x.length - 3) }
+      def longString = regex(("\"\"\"" + """[^"]*(\\"[^"]*)*""" + "\"\"\"")r) ^^ { case x =>x.substring(3,x.length - 3) }
       
       private def makeTriple(subject:Resource, 
       predObjs : List[~[NamedNode,List[Tuple2[Value,List[Triple]]]]]) : List[Triple] = {
