@@ -637,35 +637,35 @@ object SPARQLParser  {
       case None ~ y => y
     }
     
-    def baseDecl = "BASE" ~> uriref2 ^^
+    def baseDecl = """(?i)\QBASE\E""".r ~> uriref2 ^^
     { x => prefixMap.put("",NameSpace("",x)); NameSpace("",x) }
     
-    def prefixDecl = "PREFIX" ~> pNameColon ~ uriref2 ^^
+    def prefixDecl = """(?i)\QPREFIX\E""".r ~> pNameColon ~ uriref2 ^^
     { case x ~ y => prefixMap.put(x,NameSpace(x,y)); NameSpace(x,y) }
     
-    def selectQuery = "SELECT" ~> (( "DISTINCT" ^^^ SelectModifier.distinct | "REDUCED" ^^^ SelectModifier.reduced)?) ~ 
+    def selectQuery = """(?i)\QSELECT\E""".r ~> (( """(?i)\QDISTINCT\E""".r ^^^ SelectModifier.distinct | """(?i)\QREDUCED\E""".r ^^^ SelectModifier.reduced)?) ~ 
     ( (Var+) | "*" ^^^ Nil ) ~ (datasetClause *) ~  whereClause ~ solutionModifier ^^
     { case a ~ b ~ c ~ d ~ e => SelectQuery(a,b,c,d,e) }
       
-    def constructQuery = "CONSTRUCT" ~> constructTemplate ~ (datasetClause*) ~ whereClause ~ solutionModifier ^^
+    def constructQuery = """(?i)\QCONSTRUCT\E""".r ~> constructTemplate ~ (datasetClause*) ~ whereClause ~ solutionModifier ^^
     { case x ~ y ~ z ~ w  => ConstructQuery(x,y,z,w) }
     
-    def describeQuery = "DESCRIBE" ~> ( (varOrNamedNode+) | "*" ^^^ Nil ) ~ (datasetClause*) ~ 
+    def describeQuery = """(?i)\QDESCRIBE\E""".r ~> ( (varOrNamedNode+) | "*" ^^^ Nil ) ~ (datasetClause*) ~ 
       (whereClause?) ~ solutionModifier ^^
       { case x ~ y ~ z ~ w => DescribeQuery(x,y,z.getOrElse(Nil),w) }
       
-    def askQuery = "ASK" ~> (datasetClause*) ~ whereClause ^^ 
+    def askQuery = """(?i)\QASK\E""".r ~> (datasetClause*) ~ whereClause ^^ 
     { case x ~ y => AskQuery(x,y) }
     
-    def datasetClause : Parser[DatasetClause] = "FROM" ~> ( namedGraphClause | defaultGraphClause )
+    def datasetClause : Parser[DatasetClause] = """(?i)\QFROM\E""".r ~> ( namedGraphClause | defaultGraphClause )
     
     def defaultGraphClause = sourceSelector ^^ { DefaultGraphClause(_) }
     
-    def namedGraphClause = "NAMED" ~> sourceSelector ^^ { NamedGraphClause(_) }
+    def namedGraphClause = """(?i)\QNAMED\E""".r ~> sourceSelector ^^ { NamedGraphClause(_) }
     
     def sourceSelector = uriRef
     
-    def whereClause = ("WHERE"?) ~> groupGraphPattern
+    def whereClause = ("""(?i)\QWHERE\E""".r.?) ~> groupGraphPattern
     
     def solutionModifier = (orderClause?) ~ (limitOffsetClause?) ^^
     { case Some(x) ~ Some(y) => x ++ y
@@ -679,13 +679,13 @@ object SPARQLParser  {
     limitClause ^^ { x => SolutionModifier(limit=Some(Integer.parseInt(x))) } | 
     offsetClause ^^ { x => SolutionModifier(offset=Some(Integer.parseInt(x))) }
     
-    def limitClause = "LIMIT" ~> wholeNumber
+    def limitClause = """(?i)\QLIMIT\E""".r ~> wholeNumber
     
-    def offsetClause = "OFFSET" ~> wholeNumber
+    def offsetClause = """(?i)\QOFFSET\E""".r ~> wholeNumber
     
-    def orderClause = "ORDER" ~> "BY" ~> orderCondition ^^ { case x => SolutionModifier(order=Some(x)) }
+    def orderClause = """(?i)\QORDER\E""".r ~> """(?i)\QBY\E""".r ~> orderCondition ^^ { case x => SolutionModifier(order=Some(x)) }
     
-    def orderCondition = ( "ASC" | "DESC" ) ~ brackettedExpression  ^^
+    def orderCondition = ( """(?i)\QASC\E""".r | """(?i)\QDESC\E""".r ) ~ brackettedExpression  ^^
     { case x ~ y => AscDesc(x == "ASC", y) } |
                          constraint |
                          Var
@@ -694,15 +694,15 @@ object SPARQLParser  {
     
     def expr = optionalGraphPattern | groupOrUnionGraphPattern | graphGraphPattern | filter | triplesSameSubject
     
-    def optionalGraphPattern = "OPTIONAL" ~> groupGraphPattern ^^ { OptionalGraphPattern(_) }
+    def optionalGraphPattern = """(?i)\QOPTIONAL\E""".r ~> groupGraphPattern ^^ { OptionalGraphPattern(_) }
     
-    def graphGraphPattern = "GRAPH" ~> varOrNamedNode ~ groupGraphPattern ^^
+    def graphGraphPattern = """(?i)\QGRAPH\E""".r ~> varOrNamedNode ~ groupGraphPattern ^^
     { case x ~ y => GraphGraphPattern(x,y) }
     
-    def groupOrUnionGraphPattern = groupGraphPattern ~ (( "UNION" ~> groupGraphPattern )*) ^^
+    def groupOrUnionGraphPattern = groupGraphPattern ~ (( """(?i)\QUNION\E""".r ~> groupGraphPattern )*) ^^
     { case x ~ y => UnionGraphPattern(x :: y) }
     
-    def filter = "FILTER" ~> constraint ^^ { Filter(_) }
+    def filter = """(?i)\QFILTER\E""".r ~> constraint ^^ { Filter(_) }
     
     def constraint : Parser[Constraint] = brackettedExpression | builtInCall | functionCall
     
@@ -804,12 +804,12 @@ object SPARQLParser  {
     { case expr => BrackettedExpression(expr) }
     
     def builtInCall : Parser[BuiltInCall] = 
-                      "STR" ~> "(" ~> expression <~ ")"  ^^ { case x => BuiltInCall(BuiltIn.str, x) } |
-                      "LANG" ~> "(" ~> expression <~ ")" ^^ { case x => BuiltInCall(BuiltIn.lang, x) } |
-                      "LANGMATCHES" ~> "(" ~> (expression ~ ("," ~> expression)) <~ ")" ^^ 
+                      """(?i)\QSTR\E""".r ~> "(" ~> expression <~ ")"  ^^ { case x => BuiltInCall(BuiltIn.str, x) } |
+                      """(?i)\QLANG\E""".r ~> "(" ~> expression <~ ")" ^^ { case x => BuiltInCall(BuiltIn.lang, x) } |
+                      """(?i)\QLANGMATCHES\E""".r ~> "(" ~> (expression ~ ("," ~> expression)) <~ ")" ^^ 
                         { case x ~ y => BuiltInCall(BuiltIn.langmatches, x,Some(y)) } |
-                      "DATATYPE" ~> "(" ~> expression <~ ")" ^^ { case x => BuiltInCall(BuiltIn.datatype,x) } |
-                      "BOUND" ~> "(" ~> Var <~ ")" ^^ { case x => BuiltInCall(BuiltIn.bound,ValueExpr(x)) } |
+                      """(?i)\QDATATYPE\E""".r ~> "(" ~> expression <~ ")" ^^ { case x => BuiltInCall(BuiltIn.datatype,x) } |
+                      """(?i)\QBOUND\E""".r ~> "(" ~> Var <~ ")" ^^ { case x => BuiltInCall(BuiltIn.bound,ValueExpr(x)) } |
                       "sameTerm" ~> "(" ~> (expression ~ ("," ~> expression)) <~ ")"  ^^
                       { case x ~ y => BuiltInCall(BuiltIn.sameTerm,x,Some(y)) } |
                       "isIRI" ~> "(" ~> expression <~ ")" ^^ { case x => BuiltInCall(BuiltIn.isIRI, x) } |
@@ -819,7 +819,7 @@ object SPARQLParser  {
                       { case x => BuiltInCall(BuiltIn.isLITERAL, x) } |
                       regexExpression
                       
-    def regexExpression = "REGEX" ~> "(" ~> ((expression <~ ",") ~ (expression) ~ 
+    def regexExpression = """(?i)\QREGEX\E""".r ~> "(" ~> ((expression <~ ",") ~ (expression) ~ 
       (("," ~> expression)?)) <~ ")" ^^
       { case x ~ y ~ z => BuiltInCall(BuiltIn.regex, x, Some(y), z) }
     

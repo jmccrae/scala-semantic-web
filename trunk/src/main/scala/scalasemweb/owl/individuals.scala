@@ -1,8 +1,8 @@
 package scalasemweb.owl
 
-import scala.collection._
-import scalasemweb.rdf.model._
-import scalasemweb.rdf.collection._
+import scalasemweb.rdf.collection._;
+import scala.collection._;
+import scalasemweb.rdf.model._;
 
 
 /////////////////////////////////////////////////////////////////////////////////

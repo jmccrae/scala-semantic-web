@@ -1,6 +1,6 @@
 package scalasemweb
 
-import scalasemweb.rdf.model._
+import scalasemweb.rdf.model._;
 
 package object owl {
   implicit def ontology2tripleset(ontology : OWLOntology) = ontology.triples
