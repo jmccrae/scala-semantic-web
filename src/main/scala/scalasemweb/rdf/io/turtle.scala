@@ -421,10 +421,39 @@ object TurtleParser {
       def quotedString = longString | string
       
       //def string = "\"(([^\"])|(\\\"))+\""r
-      def string = regex(("\"" + """[^"]*(\\"[^"]*)*""" + "\"")r) ^^ { case x => x.substring(1,x.length-1) }
+      def string = regex(("\"" + """[^"]*(\\"[^"]*)*""" + "\"")r) ^^ { case x => descapeString(x.substring(1,x.length-1)) }
       
-      def longString = regex(("\"\"\"" + """[^"]*(\\"[^"]*)*""" + "\"\"\"")r) ^^ { case x =>x.substring(3,x.length - 3) }
+      def longString = regex(("\"\"\"" + """[^"]*(\\"[^"]*)*""" + "\"\"\"")r) ^^ { case x => descapeString(x.substring(3,x.length - 3)) }
       
+      private def hexChar(c : Char) : Boolean = ('0' <= c && '9' >= c) || ('a' <= c && 'f' >= c) || ('A' <= c && 'F' >= c)
+
+      def descapeString(s : String) : String = {
+         val sb = new StringBuilder(s)
+         var i = 0
+         while(i < sb.length) {
+           if(sb.charAt(i) == '\\' && sb.length > i + 1) {
+              sb.charAt(i+1) match {
+                case 't' => sb.replace(i,i+2,"\t")
+                case 'n' => sb.replace(i,i+2,"\n")
+                case 'r' => sb.replace(i,i+2,"\r")
+                case '"' => sb.replace(i,i+2,"\"")
+                case '>' => sb.replace(i,i+2,">")
+                case '\\' => sb.replace(i,i+2,"\\")
+                case 'u' => {
+                  if(sb.length > i + 9 && (2 to 9 forall { n => hexChar(sb.charAt(i+n)) })) {
+                     sb.replace(i,i+10,Integer.parseInt(sb.substring(i+2,i+10),16).toChar + "")
+                  } else if(sb.length > i + 5 && (2 to 5 forall { n => hexChar(sb.charAt(i+n)) })) {
+                     sb.replace(i,i+6,Integer.parseInt(sb.substring(i+2,i+6),16).toChar + "")
+                  }
+                }
+                case _ =>
+             }
+           }
+           i = i + 1
+         }
+         sb.toString
+      }
+
       private def makeTriple(subject:Resource, 
       predObjs : List[~[NamedNode,List[Tuple2[Value,List[Triple]]]]]) : List[Triple] = {
         predObjs.flatMap{
