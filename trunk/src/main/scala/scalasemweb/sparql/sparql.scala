@@ -6,12 +6,15 @@ import java.net.URI
 
 trait SPARQLElement
 
+// Todo: This only supports SPARQL 1.0
+// Need to update to SPARQL 1.1
+
 /**
  * A SPARQL query
  * @param decls Any namespace headers
  * @param body The query body
  */
-case class SPARQLQuery(val decls : List[NameSpace], val body : SPARQLQuery.QueryBody) extends SPARQLElement{
+case class SPARQLQuery(val decls : List[NameSpace], val body : QueryBody) extends SPARQLElement{
   private def nsToString(ns:NameSpace) = ns match {
     case NameSpace("",x) => "BASE <" + x + ">"
     case NameSpace(x,y) => "PREFIX " + x + ": <" + y + ">"
@@ -19,8 +22,8 @@ case class SPARQLQuery(val decls : List[NameSpace], val body : SPARQLQuery.Query
   
   def filter(p : (RDFValue) => Boolean) : List[RDFValue] = body.filter(p)
   
-  def vars : Set[SPARQLQuery.Variable] = filter(_.isInstanceOf[SPARQLQuery.Variable]).map{
-    case v : SPARQLQuery.Variable => v
+  def vars : Set[Variable] = filter(_.isInstanceOf[Variable]).map{
+    case v : Variable => v
     case _ => throw new RuntimeException("unreachable") 
   }.toSet
     
@@ -28,7 +31,7 @@ case class SPARQLQuery(val decls : List[NameSpace], val body : SPARQLQuery.Query
   (if(!decls.isEmpty) { "\n" } else { "" }) + body
 }
 
-object SPARQLQuery {
+//object SPARQLQuery {
   /**
    * The body of the query
    */
@@ -62,7 +65,7 @@ object SPARQLQuery {
    * @param whereClause The main search clause
    * @param solutionModifier Modifiers to the result (limit, offset, order)
    */
-  case class SelectQuery(val modifier : Option[SelectModifier], val selection : List[Variable], 
+  case class SelectQuery(val modifier : Option[SelectModifier], val selection : List[VariableOrAggregate], 
     val datasetClauses : List[DatasetClause], val whereClause : List[GraphExpression], 
     val solutionModifier : SolutionModifier) 
     extends QueryBody{
@@ -404,16 +407,50 @@ object SPARQLQuery {
     }
   }
   
+  trait VariableOrAggregate extends Constraint with RDFValue
+  
   /**
    * A variable in a SPARQL expression
    * @param id The id of the variable (no ? or $)
    */
-  case class Variable(val id : String) extends NamedNode with Constraint {
+  case class Variable(val id : String) extends NamedNode with VariableOrAggregate {
     def filter(p : (RDFValue) => Boolean) : List[RDFValue] = if(p(this)) { List(this) } else { Nil }
     
     override def toString = "?"+id
     /** The uri is of the form <code>var:x</code> */
     def uri = URI.create("var:"+id)
+  }
+  
+  trait Aggregate extends VariableOrAggregate {
+    def filter(p : (RDFValue) => Boolean) : List[RDFValue] = throw new UnsupportedOperationException() 
+  }
+  
+  case class CountAggregate(val distinct : Boolean, val expr : Option[ValueLogical]) extends Aggregate {
+    override def toString = "COUNT("+(if(distinct) { "DISTINCT " } else { ""})+expr.getOrElse("*")+")"
+  }
+  
+  case class SumAggregate(val distinct : Boolean, val expr : ValueLogical) extends Aggregate {
+    override def toString = "SUM("+(if(distinct) { "DISTINCT " } else { ""})+expr+")"
+  }
+  
+  case class MinAggregate(val distinct : Boolean, val expr : ValueLogical) extends Aggregate {
+    override def toString = "MIN("+(if(distinct) { "DISTINCT " } else { ""})+expr+")"
+  }
+  
+  case class MaxAggregate(val distinct : Boolean, val expr : ValueLogical) extends Aggregate {
+    override def toString = "MAX("+(if(distinct) { "DISTINCT " } else { ""})+expr+")"
+  }
+  
+  case class AvgAggregate(val distinct : Boolean, val expr : ValueLogical) extends Aggregate {
+    override def toString = "AVG("+(if(distinct) { "DISTINCT " } else { ""})+expr+")"
+  }
+  
+  case class SampleAggregate(val distinct : Boolean, val expr : ValueLogical) extends Aggregate {
+    override def toString = "SAMPLE("+(if(distinct) { "DISTINCT " } else { ""})+expr+")"
+  }
+  
+  case class GroupConcatAggregate(val distinct : Boolean, val expr : ValueLogical) extends Aggregate {
+    override def toString = "GROUP_CONCAT("+(if(distinct) { "DISTINCT " } else { ""})+expr+")"
   }
   
   /**
@@ -605,7 +642,7 @@ object SPARQLQuery {
     
     override def toString = value.toString 
   }
-}
+//}
 
 /**
  * Parser to read SPARQL queries
@@ -614,16 +651,23 @@ object SPARQLParser  {
   import SPARQLQuery._
   /**
    * Parse a SPARQL query as a string
+   * @param q The query
+   * @param prefixes Extra prefixes to include implicitly
+   * @throws SPARQLParseException If the query is not syntactically valid
    */
-  def parse(q : String) = {
-    val parser = new ParserImpl
+  def parse(q : String, prefixes : Map[String,String] = Map(), strict : Boolean = false) = {
+    val parser = new ParserImpl(strict)
+    for((prefix,uri) <- prefixes) {
+      parser.prefixMap.put(prefix,NameSpace(prefix,uri))
+    }
+    // Skip all new line characters
     parser.parseAll(parser.query,q) match {
       case parser.Success(res,_) => res
-      case x => throw new IllegalArgumentException(x.toString)
+      case x => throw new SPARQLParseException(x.toString)
     }
   }
   
-  private[SPARQLParser] class ParserImpl extends JavaTokenParsers {
+  private[SPARQLParser] class ParserImpl(strict : Boolean) extends JavaTokenParsers {
     import scala.collection.mutable.HashMap    
   
     var prefixMap = new HashMap[String,NameSpace]()
@@ -644,9 +688,16 @@ object SPARQLParser  {
     { case x ~ y => prefixMap.put(x,NameSpace(x,y)); NameSpace(x,y) }
     
     def selectQuery = """(?i)\QSELECT\E""".r ~> (( """(?i)\QDISTINCT\E""".r ^^^ SelectModifier.distinct | """(?i)\QREDUCED\E""".r ^^^ SelectModifier.reduced)?) ~ 
-    ( (Var+) | "*" ^^^ Nil ) ~ (datasetClause *) ~  whereClause ~ solutionModifier ^^
+    varSelectBlock ~ (datasetClause *) ~  whereClause ~ solutionModifier ^^
     { case a ~ b ~ c ~ d ~ e => SelectQuery(a,b,c,d,e) }
       
+    // In non-strict mode, allow variables to be separated by ","
+    def varSelectBlock = if(strict) {
+      ( (Var+) | "*" ^^^ Nil )
+    } else {
+      ( rep1sep(varOrAggregate,",".?)  | "*" ^^^ Nil )
+    }
+    
     def constructQuery = """(?i)\QCONSTRUCT\E""".r ~> constructTemplate ~ (datasetClause*) ~ whereClause ~ solutionModifier ^^
     { case x ~ y ~ z ~ w  => ConstructQuery(x,y,z,w) }
     
@@ -674,10 +725,19 @@ object SPARQLParser  {
       case None ~ None => SolutionModifier()
     }
     
-    def limitOffsetClause = limitClause ~ offsetClause ^^ 
-    { case x ~ y => SolutionModifier(limit=Some(Integer.parseInt(x)),offset=Some(Integer.parseInt(y)))} | 
-    limitClause ^^ { x => SolutionModifier(limit=Some(Integer.parseInt(x))) } | 
-    offsetClause ^^ { x => SolutionModifier(offset=Some(Integer.parseInt(x))) }
+    def limitOffsetClause = if(strict) {
+      limitClause ~ offsetClause ^^ 
+      { case x ~ y => SolutionModifier(limit=Some(Integer.parseInt(x)),offset=Some(Integer.parseInt(y)))} | 
+      limitClause ^^ { x => SolutionModifier(limit=Some(Integer.parseInt(x))) } | 
+      offsetClause ^^ { x => SolutionModifier(offset=Some(Integer.parseInt(x))) }
+    } else {
+      limitClause ~ offsetClause ^^ 
+      { case x ~ y => SolutionModifier(limit=Some(Integer.parseInt(x)),offset=Some(Integer.parseInt(y)))} | 
+      offsetClause ~ limitClause ^^ 
+      { case y ~ x => SolutionModifier(limit=Some(Integer.parseInt(x)),offset=Some(Integer.parseInt(y)))} | 
+      limitClause ^^ { x => SolutionModifier(limit=Some(Integer.parseInt(x))) } | 
+      offsetClause ^^ { x => SolutionModifier(offset=Some(Integer.parseInt(x))) }
+    }
     
     def limitClause = """(?i)\QLIMIT\E""".r ~> wholeNumber
     
@@ -685,14 +745,16 @@ object SPARQLParser  {
     
     def orderClause = """(?i)\QORDER\E""".r ~> """(?i)\QBY\E""".r ~> orderCondition ^^ { case x => SolutionModifier(order=Some(x)) }
     
-    def orderCondition = ( """(?i)\QASC\E""".r | """(?i)\QDESC\E""".r ) ~ brackettedExpression  ^^
+    def orderCondition = ( """(?i)\QASC\E""".r | """(?i)\QDESC\E""".r ) ~ (if(strict) { brackettedExpression } else { brackettedExpression | sqBrackettedExpression }) ^^
     { case x ~ y => AscDesc(x == "ASC", y) } |
                          constraint |
                          Var
     
-    def groupGraphPattern : Parser[List[GraphExpression]] = "{" ~> repsep(expr,".") <~ "}"
+    def groupGraphPattern : Parser[List[GraphExpression]] = "{" ~> rep(expr) <~ "}" ^^ { x => x.flatten }
     
-    def expr = optionalGraphPattern | groupOrUnionGraphPattern | graphGraphPattern | filter | triplesSameSubject
+    def expr : Parser[List[GraphExpression]] = graphPatternNotTriples ^^ { p => List(p) } | rep1sep(triplesSameSubject,".") <~ ".".? 
+    
+    def graphPatternNotTriples = (optionalGraphPattern | groupOrUnionGraphPattern | graphGraphPattern | filter) <~ ".".?
     
     def optionalGraphPattern = """(?i)\QOPTIONAL\E""".r ~> groupGraphPattern ^^ { OptionalGraphPattern(_) }
     
@@ -747,15 +809,31 @@ object SPARQLParser  {
     
     def varOrNamedNode = Var | uriRef
     
-    def Var : Parser[Variable] = var1 | var2
+    def Var : Parser[Variable] = var1 | var2 
+    
+    def varOrAggregate = Var | aggregate
+    
+    def aggregate =  "(?i)\\QCOUNT\\E".r ~> "(" ~> "(?i)\\QDISTINCT\\E".r.? ~ ( "*" | valueLogical ) <~ ')' ^^ {
+          case x ~ "*" => CountAggregate(x != None, None)
+          case x ~ (y : ValueLogical) => CountAggregate(x != None,Some(y))
+        } | 
+        "(?i)\\QSUM\\E".r ~> "(" ~> "(?i)\\QDISTINCT\\E".r.? ~ valueLogical <~ ")" ^^ { case x ~ y => SumAggregate(x != None,y) } |
+        "(?i)\\QMIN\\E".r ~> "(" ~> "(?i)\\QDISTINCT\\E".r.? ~ valueLogical <~ ")" ^^ { case x ~ y => MinAggregate(x != None,y) } |
+        "(?i)\\QMAX\\E".r ~> "(" ~> "(?i)\\QDISTINCT\\E".r.? ~ valueLogical <~ ")"  ^^ { case x ~ y => MaxAggregate(x != None,y) } |
+        "(?i)\\QAVG\\E".r ~> "(" ~> "(?i)\\QDISTINCT\\E".r.? ~ valueLogical <~ ")"  ^^ { case x ~ y => SumAggregate(x != None,y) } |
+        "(?i)\\QSAMPLE\\E".r ~> "(" ~> "(?i)\\QDISTINCT\\E".r.? ~ valueLogical <~ ")"  ^^ { case x ~ y => SumAggregate(x != None,y) } 
     
     def graphTerm : Parser[RDFValue] = Var | blankNode | uriRef | rdfLiteral | numericLiteral | booleanLiteral
     
     def expression = conditionalOrExpression
     
-    def conditionalOrExpression = rep1sep(conditionalAndExpression, "||") ^^ { OrExpression(_) }
+    def conditionalOrExpression = rep1sep(conditionalAndExpression, orSymbol) ^^ { OrExpression(_) }
     
-    def conditionalAndExpression = rep1sep(valueLogical, "&&")  ^^ { AndExpression(_) }
+    def orSymbol : Parser[String] = if(strict) { "||" } else { "||" | "(?i)\\QOR\\E".r }
+    
+    def conditionalAndExpression = rep1sep(valueLogical, andSymbol)  ^^ { AndExpression(_) }
+    
+    def andSymbol : Parser[String] = if(strict) { "&&" } else { "&&" | "(?i)\\QAND\\E".r }
     
     def valueLogical = (numericExpression ~ "=" ~ numericExpression |
                         numericExpression ~ "!=" ~ numericExpression |
@@ -803,6 +881,10 @@ object SPARQLParser  {
     def brackettedExpression : Parser[BrackettedExpression] = "(" ~> expression <~ ")" ^^
     { case expr => BrackettedExpression(expr) }
     
+    def sqBrackettedExpression : Parser[BrackettedExpression] = "[" ~> expression <~ "]" ^^
+    { case expr => BrackettedExpression(expr) }
+    
+    
     def builtInCall : Parser[BuiltInCall] = 
                       """(?i)\QSTR\E""".r ~> "(" ~> expression <~ ")"  ^^ { case x => BuiltInCall(BuiltIn.str, x) } |
                       """(?i)\QLANG\E""".r ~> "(" ~> expression <~ ")" ^^ { case x => BuiltInCall(BuiltIn.lang, x) } |
@@ -810,12 +892,12 @@ object SPARQLParser  {
                         { case x ~ y => BuiltInCall(BuiltIn.langmatches, x,Some(y)) } |
                       """(?i)\QDATATYPE\E""".r ~> "(" ~> expression <~ ")" ^^ { case x => BuiltInCall(BuiltIn.datatype,x) } |
                       """(?i)\QBOUND\E""".r ~> "(" ~> Var <~ ")" ^^ { case x => BuiltInCall(BuiltIn.bound,ValueExpr(x)) } |
-                      "sameTerm" ~> "(" ~> (expression ~ ("," ~> expression)) <~ ")"  ^^
+                      "(?i)\\QsameTerm\\E".r ~> "(" ~> (expression ~ ("," ~> expression)) <~ ")"  ^^
                       { case x ~ y => BuiltInCall(BuiltIn.sameTerm,x,Some(y)) } |
-                      "isIRI" ~> "(" ~> expression <~ ")" ^^ { case x => BuiltInCall(BuiltIn.isIRI, x) } |
-                      "isURI" ~> "(" ~> expression <~ ")" ^^ { case x => BuiltInCall(BuiltIn.isURI, x) } |
-                      "isBLANK" ~> "(" ~> expression <~ ")" ^^ { case x => BuiltInCall(BuiltIn.isBLANK, x) } |
-                      "isLITERAL" ~> "(" ~> expression <~ ")" ^^ 
+                      "(?i)\\QisIRI\\E".r ~> "(" ~> expression <~ ")" ^^ { case x => BuiltInCall(BuiltIn.isIRI, x) } |
+                      "(?i)\\QisURI\\E".r ~> "(" ~> expression <~ ")" ^^ { case x => BuiltInCall(BuiltIn.isURI, x) } |
+                      "(?i)\\QisBLANK\\E".r ~> "(" ~> expression <~ ")" ^^ { case x => BuiltInCall(BuiltIn.isBLANK, x) } |
+                      "(?i)\\QisLITERAL\\E".r ~> "(" ~> expression <~ ")" ^^ 
                       { case x => BuiltInCall(BuiltIn.isLITERAL, x) } |
                       regexExpression
                       
@@ -830,7 +912,7 @@ object SPARQLParser  {
     
     def rdfLiteral = strng ~ ( "^^" ~> uriRef ) ^^ { case x ~ y => TypedLiteral(x,y) } |
       strng ~ langTag ^^ { case x ~ y => LangLiteral(x,y) } |
-      string ^^ { case x => SimpleLiteral(x) }
+      strng ^^ { case x => SimpleLiteral(x) }
     
     def numericLiteral = decimalNumber ^^ 
       { case x => TypedLiteral(x,XSD._double) }
@@ -843,7 +925,7 @@ object SPARQLParser  {
     def blankNodeID = regex("""_:[A-Za-z0-9_]+"""r) ^^ 
       { case x => BlankNode(x.substring(2)) }
     
-    def anon = literal("[ ]") ^^ { x => AnonymousNode() }
+    def anon = "[" ~> "]" ^^ { x => AnonymousNode() }
     
     def langTag = regex("""@[a-z][a-z0-9]*"""r) ^^ 
       { case x => x.substring(1) }
@@ -853,34 +935,39 @@ object SPARQLParser  {
     def qname = pNameColon ~ pName ^^
     { case x ~ y => {
         if(!prefixMap.contains(x)) {
-          throw new IllegalArgumentException("Prefix " + x + " not declared")
+          throw new SPARQLParseException("Prefix " + x + " not declared")
         }
         prefixMap(x)&y
         }
     }
         
-    val pnChars =  	"[A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\u10000-\uEFFFF]"
+    val pnCharsBase = "[A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]"
+    
+    val pnChars = "[\\-_0-9\u00B7\u0300-\u036F\u203F-\u2040A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]"
     
     val varChars =
-    "[A-Za-z_0-9\u00B7\u0300-\u036F\u203F-\u2040\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\u10000-\uEFFFF]"
+    "[A-Za-z_0-9\u00B7\u0300-\u036F\u203F-\u2040\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]"
     
     
     def uriref = ("<" ~> relativeURI <~ ">") ^^ 
-      { case x => URIRef(URI.create(x)) }
+      { case x => try { URIRef(URI.create(x)) } catch { case ex : IllegalArgumentException => throw new SPARQLParseException(ex.getMessage,ex) } }
     
     def uriref2 = ("<" ~> relativeURI <~ ">")
       
     def relativeURI = """[^ <>{}\|^`\\]+"""r
         
-    def pName = (pnChars+"""*""")r 
+    def pName = (pnCharsBase + pnChars+"""*""")r 
     
-    def pNameColon = regex((pnChars+"""*:""")r) ^^ { x => x.substring(0,x.length-1) }
+    def pNameColon = regex((pnCharsBase + pnChars+"""*:""")r) ^^ { x => x.substring(0,x.length-1) } |
+      ":" ^^^ ""
     
-    def prefixName = regex((pnChars+"""*""")r)
+    def prefixName = regex((pnCharsBase + pnChars+"""*""")r)
         
-    def strng = longString | string
-        
-    def string = regex("\"" + """(([^"])|(\"))*?""" + "\""r) ^^ { case x => x.substring(1,x.length-1) }
+    def strng = longString | string1 | string2
+    
+    def string1 = regex("'" + """(([^'])|(\'))*?""" + "(?<!\\\\)'"r) ^^ { case x => x.substring(1,x.length-1) }
+    
+    def string2 = regex("\"" + """(([^"])|(\"))*?""" + "(?<!\\\\)\""r) ^^ { case x => x.substring(1,x.length-1) }
         
     def longString = regex(("\"\"\"" + """(([^"])|(\"))*?""" + "\"\"\"")r) ^^ 
       { case x => x.substring(3,x.length - 3) }
@@ -894,3 +981,4 @@ object SPARQLParser  {
   }
 }
   
+class SPARQLParseException(message : String, exception : Throwable = null) extends RuntimeException(message,exception) 

@@ -55,6 +55,7 @@ class TestSesame extends FlatSpec with ShouldMatchers {
     }
     sts should not be ('empty)
     connection.close
+    sts.close
   }
   runTest
   repo.shutDown()

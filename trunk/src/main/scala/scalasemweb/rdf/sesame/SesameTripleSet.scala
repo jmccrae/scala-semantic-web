@@ -38,7 +38,7 @@ import org.openrdf.repository._
 class SesameTripleSet(repo : Repository, context : Option[Resource] = None, pending : TripleSet = TripleSet()) extends TripleSet with SesameConversions {
   lazy val connection = repo.getConnection()
   
-  protected override def finalize {
+  def close {
     connection.close
   }
   
