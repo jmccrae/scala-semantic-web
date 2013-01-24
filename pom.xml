@@ -5,7 +5,7 @@
 
     <groupId>scalasemweb</groupId>
     <artifactId>scalasemweb</artifactId>
-    <version>1.1.2_${scala.version}</version>
+    <version>1.1.2_2.9.1</version>
     <packaging>bundle</packaging>
 
     <name>eu.monnetproject.xbrl OSGi Bundle</name>
@@ -39,7 +39,7 @@
 	<dependency>
 	   <groupId>org.scala-lang</groupId>
 	   <artifactId>scala-library</artifactId>
-	   <version>${scala.version}</version>
+	   <version>2.9.1</version>
 	</dependency>
         <dependency>
             <groupId>org.openrdf.sesame</groupId>
@@ -63,7 +63,7 @@
         </dependency>
         <dependency>
             <groupId>org.scalatest</groupId>
-            <artifactId>scalatest_${scala.version}</artifactId>
+            <artifactId>scalatest_2.9.1</artifactId>
             <version>1.6.1</version>
 	    <scope>test</scope>
         </dependency>
@@ -82,7 +82,6 @@
     </dependencies>
 
     <build>
-        <directory>generated</directory>
         <plugins>
             <plugin>
                 <groupId>org.apache.felix</groupId>
